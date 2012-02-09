@@ -14,8 +14,20 @@ public class SpeechRecognizer {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		String filename = "tf000116.wav";
-		try{ filename = args[0]; }catch(Exception e){}
+		String filename;
+		if(args.length < 1) {
+			// if no filename was given, ask for input of user
+			BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
+			System.out.println("Please enter a filename.");
+			try {
+				filename = console.readLine();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		else {
+			filename = args[0]; 
+		}
 		
 		/* imitate speech_recognizer.py here... how to do command line stuff? */
 		
@@ -31,16 +43,13 @@ public class SpeechRecognizer {
 		 */
 		
 		try {
-			
 			Runtime.getRuntime().exec("ls -la");
-
-		} catch (IOException e) {}
-		
-		
+		} 
+		catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
-	
-
     public void _extract_features_from_audio_file(String fname){
     	String source = wav+fname+".wav";
     	String target = mfc+fname+".mfc";
@@ -48,5 +57,4 @@ public class SpeechRecognizer {
 			Runtime.getRuntime().exec(hcopy+" "+source+" "+target);
 		} catch (IOException e) {}
     }
-
 }
