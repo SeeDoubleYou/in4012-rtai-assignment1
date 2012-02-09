@@ -16,8 +16,8 @@ public class Word {
 	private float probability;
 	
 	public Word(String word, Phoneme[] phonemes){
-		word = word;
-		phonemes = phonemes;
+		this.word = word;
+		this.phonemes = phonemes;
 		int num_states = phonemes.length * 3;
 		transition_probabilities = new float[num_states][num_states];
 		trps = new Hashtable<Integer, Hashtable<Integer, Float>>();
