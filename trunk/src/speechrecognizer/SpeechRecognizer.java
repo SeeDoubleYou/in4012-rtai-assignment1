@@ -51,9 +51,10 @@ public class SpeechRecognizer {
 			extractFeaturesFromAudioFile(filename);
 			
 			System.out.println("Building a featureset");
-			createFeatureSet(filename);
+			buildFeatureSet(filename);
 			
-			//TODO: build HMMSet
+			System.out.println("Building Hidden Markov Models");
+			buildHmms(filename, filename);
 		}
 		else {
 			System.out.println("No valid filename was given, please retry");
@@ -84,7 +85,7 @@ public class SpeechRecognizer {
      * Returns a list of vectors where each vector represents a time-slice, 
      * containing 39 Decimal objects representing features of that time-slice.
      */
-    public static void createFeatureSet(String filename) {
+    public static void buildFeatureSet(String filename) {
     	filename += ".mfc";
     	
     	String[] featuresRV = exec(hlist + mfc + filename);
@@ -107,7 +108,7 @@ public class SpeechRecognizer {
      * @param definitionFilename path to hmms.hmmf, contains phoneme descriptions
      * @param lexiconFilenam path to lexicon.txt, contains words and their phonemes
      */
-    public static void buildHmms(String definitionFilename, String lexiconFilenam) {
+    public static void buildHmms(String definitionFilename, String lexiconFilename) {
     	// load all data from hmms.mmf
 		String[] definitions;
 		try {
@@ -122,7 +123,7 @@ public class SpeechRecognizer {
 	        }
 	                
 	        // load all data from hmms.mmf
-	        ArrayList<String> lexicon =  (ArrayList<String>) Arrays.asList(readFileAsString(definitionFilename).split("\n"));
+	        ArrayList<String> lexicon =  (ArrayList<String>) Arrays.asList(readFileAsString(lexiconFilename).split("\n"));
 	        
 	        // remove empty items
 	        Iterator<String> i = lexicon.iterator();
