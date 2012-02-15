@@ -2,6 +2,12 @@ package speechrecognizer;
 
 import java.lang.Math;
 
+/**
+ * 
+ * @author Chris van Egmond
+ * @author Cees-Wilem Hofstede
+ *
+ */
 public class State {
 	
 	private float[] means;
