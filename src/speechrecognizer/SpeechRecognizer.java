@@ -3,6 +3,7 @@ package speechrecognizer;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Hashtable;
 import java.util.Iterator;
 
 
@@ -22,6 +23,9 @@ public class SpeechRecognizer {
     static String wav   = data + "wav/";
     
     static ArrayList<Float> featureset = new ArrayList<Float>();
+
+    static Hashtable<String, Phoneme> phonemes = new Hashtable<String, Phoneme>();
+    static ArrayList<Word> words = new ArrayList<Word>();
 
 	/**
 	 * @param args
@@ -97,18 +101,24 @@ public class SpeechRecognizer {
     	}
     }
     
-    
+    /**
+     * Builds HMMs for every word in the lexicon.
+     * 
+     * @param definitionFilename path to hmms.hmmf, contains phoneme descriptions
+     * @param lexiconFilenam path to lexicon.txt, contains words and their phonemes
+     */
     public static void buildHmms(String definitionFilename, String lexiconFilenam) {
     	// load all data from hmms.mmf
 		String[] definitions;
 		try {
 			definitions = readFileAsString(definitionFilename).split("~h");
 	    
-			ArrayList<Phoneme> phonemes = new ArrayList<Phoneme>();
+			phonemes = new Hashtable<String, Phoneme>();
 	       
 			// construct phonemes
 	        for(String phonemeData: definitions) {
-	        	phonemes.add(new Phoneme(phonemeData));
+	        	Phoneme tmp = new Phoneme(phonemeData);
+	        	phonemes.put(tmp.getName(), tmp);
 	        }
 	                
 	        // load all data from hmms.mmf
@@ -123,26 +133,22 @@ public class SpeechRecognizer {
 	            {
 	                i.remove();
 	            }
+	            else
+	            {
+	            	String[] parts = s.split(" ");
+	            	// parts = ["woord", "w", "oo", "r", "d"]
+	            	String word = parts[0];
+	            	
+	            	// create phonemes for all but the first entry in parts
+	            	Phoneme[] pns = new Phoneme[parts.length-1];
+	            	for(int j=1; j<parts.length; j++)
+	            	{
+	            		pns[j-1] = phonemes.get(parts[j]);
+	            	}
+	            	words.add(new Word(word, pns));
+	            }
 	        }
-	
-	        /*
 	        
-	        PYTHON:
-	        
-	        // construct HMM's for words
-	        self._hmms = []
-	        # get tuples of (word, ['p','h','o','n','e','m','e','s'])            
-	        tuples = [(w[0:w.index(" ")], w[w.index(" "):].lstrip(" ").split(" ")) for w in ct]
-	        for t in tuples:
-	            self._hmms.append(HMM(word=t[0], parts=t[1], hmms=self))
-	            
-	        print "BUILDING COMPLETE HMM NOW!"
-	        self._s_start = State(means=[], variances=[], identifier="start")
-	        self._s_end = State(means=[], variances=[], identifier="end")
-	        self._transmission_probabilities = {}
-	        self.build_complete_hmm()
-	        print "HMM build completed!"
-	        */
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
