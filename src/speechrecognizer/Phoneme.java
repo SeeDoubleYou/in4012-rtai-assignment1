@@ -1,7 +1,5 @@
 package speechrecognizer;
 
-import java.util.ArrayList;
-
 /**
  * 
  * @author Chris van Egmond
@@ -14,26 +12,16 @@ public class Phoneme {
 	private State state2, state3, state4;
 	private float[][] transition_probabilities = new float[5][5];
 	
-	// list of 3 vectors, though they are offset by 1 at the start and end because we want 
-    // state 2, 3, 4 this means the first 2 lists at index 0 and 1 are empty dummies. just
-    // access the appropriate list at index = state number-1 (eg. means = [[], M2, M3, M4, []])
-	private float[][] means     = new float[5][5];
-	private float[][] variances = new float[5][5];
-	private float[][] tp        = new float[5][5];;
-	
-	private ArrayList<State> states = new ArrayList<State>();
-	
 	public Phoneme(String datastring){
-		// TODO parse to data.. maybe write PhonemeFactory class for this
 		String[] parts = datastring.split("<");
 		name = parts[0].replace("\n", "").replace("\\", "");
+		
+		float[][] means     = new float[5][5];
+		float[][] variances = new float[5][5];
         
-		int index = 1;
+		int index = 0;
         for(String part : parts) {
-            if(part.startsWith("STATE")) {
-                index = Integer.parseInt(part.replace("STATE> \n", ""))-1;
-            }
-            else if(part.startsWith("MEAN")) {
+        	if(part.startsWith("MEAN")) {
             	part.replace("MEAN> 39\n", "");
             	String[] subparts = part.split(" ");
             	int subindex = 0;
@@ -59,37 +47,19 @@ public class Phoneme {
             	for(String line : lines) {
             		String[] cells = line.split(" ");
             		for(String cell : cells){
-            			tp[row][column] = Float.valueOf(cell.trim()).floatValue();
+            			transition_probabilities[row][column] = Float.valueOf(cell.trim()).floatValue();
             			column++;
             		}
             		column = 0;
             		row++;
             	}
             }
+        	index++;
         }           
-        
-        //TODO: cannot add string to a State array
-        //states.add("start")
-        for(int i = 1; i < means.length; i++) {
-        	states.add(new State(means[i], variances[i], name + (i+1), this));
-        }
-        //states.append("end")
 
-//      COMPLETELY UNCLEAR WHAT HAPPENS HERE!!!
-//        				|
-//       				V 
-//        for i in range(len(self._states)):
-//            self._transp[self._states[i]] = {}
-//            for j in range(len(self._states)):
-//                self._transp[self._states[i]][self._states[j]] = self._tp[i][j] 
-       
-        //current translation from python
-        int statesSize = states.size();
-        for(int i = 0; i < statesSize; i++) {
-        	for(int j = 0; j < statesSize; j++) {
-        		 transition_probabilities = tp;
-        	}
-        }
+        state2 = new State(means[0], variances[0], name + "2", this);
+        state3 = new State(means[1], variances[1], name + "3", this);
+        state4 = new State(means[2], variances[2], name + "4", this);
 	}
 	
 	public String getName(){
