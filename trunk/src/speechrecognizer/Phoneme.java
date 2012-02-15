@@ -52,13 +52,18 @@ public class Phoneme {
             	}
             }
             else if (part.startsWith("TRANSP")) {
-            	//TODO: THIS MAY BE A WRONG TRANSLATION FROM PYTHON!!!
             	part.replace("TRANSP> 5\n", "");
-            	String[] subparts = part.split(" ");
-            	int subindex = 0;
-            	for(String x : subparts) {
-            		tp[index][subindex] = Float.valueOf(x.trim()).floatValue();
-            		subindex++;
+            	String[] lines = part.split(" ");
+            	int row = 0;
+            	int column = 0;
+            	for(String line : lines) {
+            		String[] cells = line.split(" ");
+            		for(String cell : cells){
+            			tp[row][column] = Float.valueOf(cell.trim()).floatValue();
+            			column++;
+            		}
+            		column = 0;
+            		row++;
             	}
             }
         }           
