@@ -22,7 +22,7 @@ public class SpeechRecognizer {
     static String mfc   = data + "mfc/";
     static String wav   = data + "wav/";
     
-    static ArrayList<Float> featureset = new ArrayList<Float>();
+    static float[][] featureset;
 
     static Hashtable<String, Phoneme> phonemes = new Hashtable<String, Phoneme>();
     static ArrayList<Word> words = new ArrayList<Word>();
@@ -31,7 +31,7 @@ public class SpeechRecognizer {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		String filename = "tf000116";
+		String filename = "tf000416";
 //		if(args.length < 1) {
 //			// if no filename was given, ask for input of user
 //			BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
@@ -92,9 +92,20 @@ public class SpeechRecognizer {
     	
     	if(featuresRV[0].equals("0")) {
     		System.out.println("Succesfully build the features");
-    		String[] features = featuresRV[1].split(" ");
-    		for(String feature : features) {
-    			featureset.add(Float.valueOf(feature.trim()).floatValue());
+    		String[] timeslices = featuresRV[1].split(" ");
+    		int index_time = 0;
+    		for(String ts : timeslices) {
+    			ts = ts.replace("\n", "");
+    			ts = ts.trim();
+    			String[] features = ts.split(" ");
+    			int index_feature = 0;
+    			for(String feature : features)
+    			{
+    				featureset[index_time][index_feature] = Float.valueOf(feature.trim()).floatValue();
+    				index_feature++;
+    			}
+    			
+    			index_time++;
     		}
     	}
     	else {
@@ -165,7 +176,7 @@ public class SpeechRecognizer {
     	Runtime RT = Runtime.getRuntime();
     	int exitVal = -1;
     	String output = "";
-		
+    	
 		try {
 			// execute the command
 			Process proc = RT.exec(cmd); 
@@ -185,6 +196,7 @@ public class SpeechRecognizer {
 			}
 		}
 		catch (IOException e) {
+			System.out.println("ERROR PROCESSING: "+cmd);
 			e.printStackTrace();
 		}
 		
