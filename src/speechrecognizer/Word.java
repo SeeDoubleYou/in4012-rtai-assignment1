@@ -14,7 +14,8 @@ public class Word {
 	private String word;
 	private Phoneme[] phonemes;
 	private ArrayList<State> states = new ArrayList<State>();
-	private float[][] transition_probabilities;
+	
+	//transition probabilities.
 	private Hashtable<Integer, Hashtable<Integer, Float>> trps;
 	
 	// These 2 are only initialized after executing the viterbi algorithm
@@ -24,8 +25,6 @@ public class Word {
 	public Word(String word, Phoneme[] phonemes){
 		this.word = word;
 		this.phonemes = phonemes;
-		int num_states = phonemes.length * 3;
-		transition_probabilities = new float[num_states][num_states];
 		trps = new Hashtable<Integer, Hashtable<Integer, Float>>();
 		
 		float temp = -1;
@@ -42,7 +41,6 @@ public class Word {
 			states.add( s3 );
 			states.add( s4 );
 			
-			
 			float[][] tps = phonemes[i].getTransitionProbabilities();
 			if(temp != -1){
 				try{
@@ -51,7 +49,6 @@ public class Word {
 					trps.put(i*3-1, new Hashtable<Integer, Float>()); 
 					trps.get(i*3-1).put(i*3, temp); 
 				}
-				//try{ transition_probabilities[i*3-1][i*3] = temp; }catch( Exception e ){}
 			}
 
 			hts1 = new Hashtable<Integer, Float>();
@@ -73,19 +70,7 @@ public class Word {
 			trps.put(i*3, hts1);
 			trps.put(i*3+1, hts2);
 			trps.put(i*3+2, hts3);
-/*
-			transition_probabilities[i*3][i*3] = tps[1][1];
-			transition_probabilities[i*3][i*3+1] = tps[1][2];
-			transition_probabilities[i*3][i*3+2] = tps[1][3];
-
-			transition_probabilities[i*3+1][i*3] = tps[2][1];
-			transition_probabilities[i*3+1][i*3+1] = tps[2][2];
-			transition_probabilities[i*3+1][i*3+2] = tps[2][3];
-
-			transition_probabilities[i*3+2][i*3] = tps[3][1];
-			transition_probabilities[i*3+2][i*3+1] = tps[3][2];
-			transition_probabilities[i*3+2][i*3+2] = tps[3][3];
-	*/		
+			
 			temp = tps[3][4];
 		}
 	}
