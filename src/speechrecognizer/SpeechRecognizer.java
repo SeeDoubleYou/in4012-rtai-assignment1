@@ -2,6 +2,9 @@ package speechrecognizer;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+
 
 /**
  * 
@@ -44,7 +47,7 @@ public class SpeechRecognizer {
 			extractFeaturesFromAudioFile(filename);
 			
 			System.out.println("Building a featureset");
-			buildObjectFromFeatureset(filename);
+			createFeatureSet(filename);
 			
 			//TODO: build HMMSet
 		}
@@ -68,8 +71,8 @@ public class SpeechRecognizer {
 	 * @param fname The name of the file (without extension)
 	 */
     public static void extractFeaturesFromAudioFile(String fname) {
-    	String source = wav+fname+".wav";
-    	String target = mfc+fname+".mfc";
+    	String source = wav + fname + ".wav";
+    	String target = mfc + fname + ".mfc";
     	exec(hcopy + "  " + source + " " + target);
     }
     
@@ -77,7 +80,7 @@ public class SpeechRecognizer {
      * Returns a list of vectors where each vector represents a time-slice, 
      * containing 39 Decimal objects representing features of that time-slice.
      */
-    public static void buildObjectFromFeatureset(String filename) {
+    public static void createFeatureSet(String filename) {
     	filename += ".mfc";
     	
     	String[] featuresRV = exec(hlist + mfc + filename);
@@ -92,6 +95,57 @@ public class SpeechRecognizer {
     	else {
     		System.out.println("Something went wrong with building the features, please retry");
     	}
+    }
+    
+    
+    public static void buildHmms(String definitionFilename, String lexiconFilenam) {
+    	// load all data from hmms.mmf
+		String[] definitions;
+		try {
+			definitions = readFileAsString(definitionFilename).split("~h");
+	    
+			ArrayList<Phoneme> phonemes = new ArrayList<Phoneme>();
+	       
+			// construct phonemes
+	        for(String phonemeData: definitions) {
+	        	phonemes.add(new Phoneme(phonemeData));
+	        }
+	                
+	        // load all data from hmms.mmf
+	        ArrayList<String> lexicon =  (ArrayList<String>) Arrays.asList(readFileAsString(definitionFilename).split("\n"));
+	        
+	        // remove empty items
+	        Iterator<String> i = lexicon.iterator();
+	        while (i.hasNext())
+	        {
+	            String s = i.next();
+	            if (s == null || s.isEmpty())
+	            {
+	                i.remove();
+	            }
+	        }
+	
+	        /*
+	        
+	        PYTHON:
+	        
+	        // construct HMM's for words
+	        self._hmms = []
+	        # get tuples of (word, ['p','h','o','n','e','m','e','s'])            
+	        tuples = [(w[0:w.index(" ")], w[w.index(" "):].lstrip(" ").split(" ")) for w in ct]
+	        for t in tuples:
+	            self._hmms.append(HMM(word=t[0], parts=t[1], hmms=self))
+	            
+	        print "BUILDING COMPLETE HMM NOW!"
+	        self._s_start = State(means=[], variances=[], identifier="start")
+	        self._s_end = State(means=[], variances=[], identifier="end")
+	        self._transmission_probabilities = {}
+	        self.build_complete_hmm()
+	        print "HMM build completed!"
+	        */
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
     }
     
     /**
@@ -132,5 +186,24 @@ public class SpeechRecognizer {
 		rv[1] = output;						// possible output of the command
 				
 		return rv;
+    }
+    
+    /**
+     * Read a file and return contents as a String
+     * 
+     * @param filePath
+     * @return
+     * @throws java.io.IOException
+     */
+    private static String readFileAsString(String filePath) throws java.io.IOException{
+        byte[] buffer = new byte[(int) new File(filePath).length()];
+        BufferedInputStream f = null;
+        try {
+            f = new BufferedInputStream(new FileInputStream(filePath));
+            f.read(buffer);
+        } finally {
+            if (f != null) try { f.close(); } catch (IOException ignored) { }
+        }
+        return new String(buffer);
     }
 }
