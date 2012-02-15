@@ -10,8 +10,13 @@ import org.junit.Test;
 import speechrecognizer.Phoneme;
 import speechrecognizer.State;
 
+/**
+ * 
+ * @author Chris van Egmond
+ * @author Cees-Wilem Hofstede
+ *
+ */
 public class StateTest {
-	
 	private State state;
 	private Phoneme pn = new Phoneme("random datastring");
 	private String statename = "state";
@@ -45,5 +50,4 @@ public class StateTest {
 	public void testToString(){
 		assertEquals(state.toString(), statename);
 	}
-
 }

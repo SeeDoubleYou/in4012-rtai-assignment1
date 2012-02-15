@@ -3,6 +3,12 @@ package speechrecognizer;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
+/**
+ * 
+ * @author Chris van Egmond
+ * @author Cees-Wilem Hofstede
+ *
+ */
 public class Word {
 
 	private String word;
@@ -92,13 +98,13 @@ public class Word {
 	 * @return probability of the best path given the observations
 	 */
 	public float viterbi(float[][] obs){
-		Hashtable<Integer, Hashtable<State, Float>> V = new Hashtable<Integer, Hashtable<State, Float>>();
-		Hashtable<State, ArrayList<State>> path = new Hashtable<State, ArrayList<State>>();
-		Hashtable<State, Hashtable<Integer, Float>> ol = new Hashtable<State, Hashtable<Integer, Float>>();
+		Hashtable<Integer, Hashtable<State, Float>>   V    = new Hashtable<Integer, Hashtable<State, Float>>();
+		Hashtable<State,   ArrayList<State>>          path = new Hashtable<State,   ArrayList<State>>();
+		Hashtable<State,   Hashtable<Integer, Float>> ol   = new Hashtable<State,   Hashtable<Integer, Float>>();
 
 		V.put(0, new Hashtable<State, Float>());
 		
-		for(State state : states){
+		for(State state : states) {
 			V.get(0).put(state, state.observationLikelihood(obs[0]));
 			
 			path.put(state, new ArrayList<State>());
@@ -113,7 +119,7 @@ public class Word {
 		Hashtable<State, ArrayList<State>> newpath;
 		float temp_tp;
 		
-		for(int i=1; i<obs.length; i++){
+		for(int i=1; i<obs.length; i++) {
 			V.put(i, new Hashtable<State, Float>());
 			newpath = new Hashtable<State, ArrayList<State>>();
 			
