@@ -13,7 +13,22 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 
+import com.csvreader.CsvReader;
+import com.csvreader.CsvWriter;
+
+
 /**
+ * Speech recognizer for a certain given set of files (see data folder).
+ * It will parse given files. Files can be given as command line parameters, or
+ * if no argument was given trough a prompt. You can do several files at once
+ * by given ech filename seperated by a space. You could also say "all" 
+ * (without the quotes of couorse) to parse all words.
+ * 
+ * Entering "exit" wil quit the
+ * program.
+ * 
+ * A log is created (comma seperated) so performance can be checked.
+ * @see http://javacsv.sourceforge.net/
  * 
  * @author Chris van Egmond
  * @author Cees-Wilem Hofstede
@@ -21,12 +36,13 @@ import java.util.List;
  */
 public class SpeechRecognizer {
 	static String data  	 = "data";
-	static String htk  	 	 = "htk/HTKTools";
+	static String htk  	 	 = "htk";
     static String conf  	 = data + "/hcopy_mfcc.cfg";
     static String hcopy 	 = htk  + "/HCopy";
     static String hlist 	 = htk  + "/HList";
     static String mfc   	 = data + "/mfc/";
     static String wav   	 = data + "/wav/";
+    static String label	 	 = data + "/label/";
     static String hmmsMmf    = data + "/hmms.mmf";
     static String lexiconTxt = data + "/lexicon.txt";
     
@@ -34,27 +50,119 @@ public class SpeechRecognizer {
 
     static Hashtable<String, Phoneme> phonemes = new Hashtable<String, Phoneme>();
     static ArrayList<Word> words = new ArrayList<Word>();
+    
+    static ArrayList<String> filenames = new ArrayList<String>();
 
+    static CsvWriter performanceLog; // file to keep track of performance (best to delete before an "all" run 
+    static String performanceLogFile = "performance.csv";
+    static boolean performanceLogExists;
+    
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		String filename = "tf000116";
-//		if(args.length < 1) {
-//			// if no filename was given, ask for input of user
-//			BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
-//			System.out.println("Please enter a filename without the extension.");
-//			try {
-//				filename = console.readLine();
-//			} catch (IOException e) {
-//				e.printStackTrace();
-//			}
-//		}
-//		else {
-//			filename = args[0]; 
-//		}
+	    boolean performanceLogExists = new File(performanceLogFile).exists();
+		performanceLog = new CsvWriter("performance.csv");
+		 
+		try {
+			// if the performance logfile didn't already exist then we need to write out the header line
+			// else assume that the file already has the correct header line
+			if (!performanceLogExists)
+			{
+				performanceLog.write("File");
+				performanceLog.write("Label");
+				performanceLog.write("recognized");
+				performanceLog.write("probability");
+				performanceLog.write("correct");
+				performanceLog.endRecord();
+				performanceLog.flush();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		
-		if(filename != "") {
+		if(args.length > 0) {
+			addFileNames(args);
+		}
+		
+		// filenames.add("tm001616"); // EASY DEBUG
+		
+		run(getFilename());
+	}
+	
+	/**
+	 * Add a list of files to parse (does a clear first)
+	 * @param args
+	 */
+	public static void addFileNames(String[] args) {
+		filenames.clear();
+		if(args.length > 0) {
+			for(String arg : args) {
+				addFileName(arg);
+			}
+		}
+	}
+
+	/**
+	 * Add a file to parse
+	 * @param filename
+	 */
+	public static void addFileName(String filename) {
+		// add filename with optional extension removed
+		filenames.add(filename.trim().replaceFirst("[.][^.]+$", ""));
+	}
+	
+	/**
+	 * Get the next filename in line to parse.
+	 * If no filename is available, ask user for input.
+	 * If user sets "all", then al files in wav folder are added
+	 * @return filename
+	 */
+	public static String getFilename() {
+		String filename = "";
+		
+		if(filenames.size() == 0) {
+			// no filename available, ask for input of user
+			BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
+			System.out.println("Which file(s) would you like to try?");
+			try {
+				String[] args = console.readLine().split(" ");
+				if(args.length > 0) {
+					addFileNames(args);
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		else {
+			filename = filenames.remove(0);
+		}
+		
+		// user requested all files to be parsed, fill list of filenames based on 
+		// folder and call self again.
+		if(filename.equals("all"))
+		{
+			filenames.clear();
+			File dir = new File(wav);
+			for (File child : dir.listFiles()) {
+				if (".".equals(child.getName()) || "..".equals(child.getName())) {
+					continue;  // Ignore the self and parent aliases.
+				}
+				addFileName(child.getName());  
+			}
+			filename = getFilename();
+		}
+		
+		return filename;
+	}
+	
+	public static void run(String filename) {
+		if(filename.equals("exit")) {
+	        performanceLog.close();
+			System.exit(0);
+		}
+		
+		if(!filename.equals("")) {
 			System.out.println("Investigating audiofile: " + filename);
 			extractFeaturesFromAudioFile(filename);
 			
@@ -76,11 +184,28 @@ public class SpeechRecognizer {
 		    		bestScore = probability;
 		    	}
 		    }
-		    System.out.println("Best word is " + bestWord.getWord() + " with a probability of " + bestScore);
+		    String bestLabel = bestWord.getWord();
+		    
+		    System.out.println("\nBest word is " + bestLabel + " with a probability of " + bestScore);
+		    
+		    try {
+		    	String actualLabel = readFileAsString(label + filename + ".lab").trim();
+				performanceLog.write(filename);
+				performanceLog.write(actualLabel);
+				performanceLog.write(bestWord.getWord());
+				performanceLog.write("" + bestScore);
+				performanceLog.write(actualLabel.equals(bestLabel) ? "1" : "0");
+				performanceLog.endRecord();
+				performanceLog.flush();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
-		else {
-			System.out.println("No valid filename was given, please retry");
-		}
+<<<<<<< .mine
+		
+		run(getFilename());
+=======
+>>>>>>> .r18
 	}
 	
 	/**
@@ -103,7 +228,6 @@ public class SpeechRecognizer {
     	String[] featuresRV = exec(new String[] {hlist, "-r", mfc + filename});
     	
     	if(featuresRV[0].equals("0")) {
-    		System.out.println("Building the features..");
     		String[] timeslices = featuresRV[1].split(" ");
     		
     		int tsl = timeslices.length/39;
