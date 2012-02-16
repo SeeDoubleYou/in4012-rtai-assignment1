@@ -67,7 +67,7 @@ public class SpeechRecognizer {
 			
 			System.out.println("Calculating probabilities");
 			Word   bestWord  = null;
-			double  bestScore = -10000.0f;
+			double  bestScore = Double.NEGATIVE_INFINITY;
 		            
 		    for(Word word: words) {
 		    	double probability = word.viterbi(featureset);

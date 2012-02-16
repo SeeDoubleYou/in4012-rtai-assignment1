@@ -3,6 +3,8 @@ package speechrecognizer;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
+import org.hamcrest.core.IsNull;
+
 /**
  * 
  * @author Chris van Egmond
@@ -114,7 +116,7 @@ public class Word {
 			for(int s1=0; s1<states.size(); s1++){
 				
 				State temp_state = null;
-				double max_prob = -1000.0f;
+				double max_prob = Double.NEGATIVE_INFINITY;
 				
 				for(int s2=0; s2<states.size(); s2++){
 					// get transition probability
@@ -126,21 +128,7 @@ public class Word {
 							double f2 = (double) Math.log(temp_tp);
 							double f3 = (double) (ol.get(states.get(s2)).get(i));
 							
-							// TODO actually, we shouldnt take the log of this again...
-							//		but if we dont, things go wrong!
-							if(f1 < 0.0f){ f1 = (double) -Math.log(Math.abs(f1)); }
-							else{ f1 = (double) Math.log(f1); }
-							/*
-							if(f2 < 0.0f){ f2 = (double) -Math.log(Math.abs(f2)); }
-							else{ f2 = (double) Math.log(f2); }
-							
-							if(f3 < 0.0f){ f3 = (double) -Math.log(Math.abs(f3)); }
-							else{ f3 = (double) Math.log(f3); }
-							*/
 							double prob = f1 + f2 + f3;
-							/*double prob = (double) (Math.log(V.get(i-1).get(states.get(s2)))
-										+ Math.log(temp_tp) 
-										+ Math.log(ol.get(states.get(s2)).get(i)));*/
 							
 							if(prob > max_prob){
 								max_prob = prob;
@@ -160,7 +148,7 @@ public class Word {
 			path = newpath;
 		}
 
-		double max_prob = -9999.0f;
+		double max_prob = Double.NEGATIVE_INFINITY;
 		State returnstate = null;
 		Hashtable<State, Double> probs = V.get(obs.length-1);
 		for(State state : states){
