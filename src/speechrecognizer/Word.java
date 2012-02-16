@@ -3,8 +3,6 @@ package speechrecognizer;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
-import org.hamcrest.core.IsNull;
-
 /**
  * 
  * @author Chris van Egmond
@@ -119,7 +117,7 @@ public class Word {
 				double max_prob = Double.NEGATIVE_INFINITY;
 				
 				for(int s2=0; s2<states.size(); s2++){
-					// get transition probability
+					// get transition probability (if it doesnt exist, p = 0)
 					try{ temp_tp = trps.get(s1).get(s2); }
 					catch(Exception e){ temp_tp = 0.0f; }
 					if(temp_tp > 0.0f){
@@ -159,7 +157,7 @@ public class Word {
 		}
 		best_path = path.get(returnstate);
 		probability = max_prob;
-		System.out.println(this.word+" :\t\t\t"+max_prob);
+		System.out.println(this.word+" :\t\t\t"+probability);
 		return probability;
 	}
 	
