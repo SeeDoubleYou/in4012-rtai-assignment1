@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Iterator;
-
+import java.util.Map;
 
 /**
  * 
@@ -14,13 +14,15 @@ import java.util.Iterator;
  *
  */
 public class SpeechRecognizer {
-	static String data  = "data/";
-	static String htk  = "htk/";
-    static String conf  = data + "hcopy_mfcc.cfg";
-    static String hcopy = htk + "HCopy -C " + conf;
-    static String hlist = htk + "HList -r ";
-    static String mfc   = data + "mfc/";
-    static String wav   = data + "wav/";
+	static String data  	 = "data";
+	static String htk  	 	 = "htk";
+    static String conf  	 = data + "/hcopy_mfcc.cfg";
+    static String hcopy 	 = htk  + "/HCopy";
+    static String hlist 	 = htk  + "/HList";
+    static String mfc   	 = data + "/mfc/";
+    static String wav   	 = data + "/wav/";
+    static String hmmsMmf    = data + "/hmms.mmf";
+    static String lexiconTxt = data + "/lexicon.txt";
     
     static float[][] featureset;
 
@@ -31,7 +33,7 @@ public class SpeechRecognizer {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		String filename = "tf000416";
+		String filename = "tf000116";
 //		if(args.length < 1) {
 //			// if no filename was given, ask for input of user
 //			BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
@@ -53,8 +55,24 @@ public class SpeechRecognizer {
 			System.out.println("Building a featureset");
 			buildFeatureSet(filename);
 			
+			/*
 			System.out.println("Building Hidden Markov Models");
-			buildHmms(filename, filename);
+			buildHmms(hmmsMmf, lexiconTxt);
+			
+			System.out.println("Calculating probabilities");
+			Word   bestWord  = null;
+			float  bestScore = 0.0f;
+		            
+		    for(Word word: words) {
+		    	float probability = word.viterbi(featureset);
+		    	if(probability > bestScore)
+		    	{
+		    		bestWord = word;
+		    		bestScore = probability;
+		    	}
+		    }
+		    System.out.println("Best word is " + bestWord.getWord() + " with a probability of " + bestScore);
+			 */
 		}
 		else {
 			System.out.println("No valid filename was given, please retry");
@@ -75,10 +93,10 @@ public class SpeechRecognizer {
 	 * 
 	 * @param fname The name of the file (without extension)
 	 */
-    public static void extractFeaturesFromAudioFile(String fname) {
-    	String source = wav + fname + ".wav";
-    	String target = mfc + fname + ".mfc";
-    	exec(hcopy + "  " + source + " " + target);
+    public static void extractFeaturesFromAudioFile(String filename) {
+    	String source = wav + filename + ".wav";
+    	String target = mfc + filename + ".mfc";
+    	exec(new String[] {hcopy, "-C", conf, source, target});
     }
     
     /**
@@ -87,8 +105,7 @@ public class SpeechRecognizer {
      */
     public static void buildFeatureSet(String filename) {
     	filename += ".mfc";
-    	
-    	String[] featuresRV = exec(hlist + mfc + filename);
+    	String[] featuresRV = exec(new String[] {hlist, "-r", mfc + filename});
     	
     	if(featuresRV[0].equals("0")) {
     		System.out.println("Succesfully build the features");
@@ -172,38 +189,48 @@ public class SpeechRecognizer {
      * @param 	cmd
      * @return 	An array containing the return value and output
      */
-    public static String[] exec(String cmd) {
+    public static String[] exec(String[] args) {
     	Runtime RT = Runtime.getRuntime();
     	int exitVal = -1;
     	String output = "";
     	
+    	ProcessBuilder builder = new ProcessBuilder(args);
+    	builder.directory(new File(new File(".").getAbsolutePath()));
+
+    	String arguments = "";
+    	for(String arg: args)
+    	{
+    		arguments += arg + " ";
+    	}
+    	System.out.println(arguments);
+    	
+        Process process;
 		try {
-			// execute the command
-			Process proc = RT.exec(cmd); 
-			
-			// read output from the command (only default output, errors are left out)
-			BufferedReader in = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+			process = builder.start();
+			InputStream is = process.getInputStream();
+			InputStreamReader isr = new InputStreamReader(is);
+			BufferedReader br = new BufferedReader(isr);
 			String line;
-		    while ((line = in.readLine()) != null) {
-		    	output += line;
-		    }
-		    
+			while ((line = br.readLine()) != null) {
+				output += line;
+			}
+			
 			try {
-				// wait for the command to finish, then record the return state
-				exitVal = proc.waitFor(); 
+				exitVal = process.waitFor();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-		}
-		catch (IOException e) {
-			System.out.println("ERROR PROCESSING: "+cmd);
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+        
 		String[] rv = new String[2];
 		rv[0] = Integer.toString(exitVal);  // the return state of the command (0 if all went well)
 		rv[1] = output;						// possible output of the command
-				
+		
+		System.out.println(exitVal);
+		System.out.println(output);
+		
 		return rv;
     }
     
