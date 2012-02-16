@@ -23,8 +23,8 @@ public class StateTest {
 	
 	@Before
 	public void setUp(){
-		float[] means = {1,2,3,4};
-		float[] variances = {1,1,1,1};
+		double[] means = {1,2,3,4};
+		double[] variances = {1,1,1,1};
 		state = new State(means, variances, statename, pn);
 	}
 
@@ -35,8 +35,8 @@ public class StateTest {
 	
 	@Test
 	public void testObservationLikelihood() {
-		float[] obs = {1,2,3,4};
-		float[] obs2 = {1,2};
+		double[] obs = {1,2,3,4};
+		double[] obs2 = {1,2};
 		assertEquals(state.observationLikelihood(obs2), 0.0f, 0.0001f);
 		assertEquals(Math.exp(state.observationLikelihood(obs)), 0.02533f, 0.0001f);
 	}

@@ -10,12 +10,12 @@ import java.lang.Math;
  */
 public class State {
 	
-	private float[] means;
-	private float[] variances;
+	private double[] means;
+	private double[] variances;
 	private String identifier;
 	private Phoneme phoneme;
 
-	public State(float[] means, float[] variances, String identifier, Phoneme phoneme) {
+	public State(double[] means, double[] variances, String identifier, Phoneme phoneme) {
 		this.means = means;
 		this.variances = variances;
 		this.identifier = identifier;
@@ -26,17 +26,17 @@ public class State {
 		return phoneme;
 	}
 	
-	public float observationLikelihood(float[] observation){
+	public double observationLikelihood(double[] observation){
 		if(observation.length != means.length){ return 0.0f; }
-		float result = 0.0f;
+		double result = 0.0f;
 		for (int i=0; i<observation.length; i++) {
 			result += Math.log( logGaussianProbability(means[i], variances[i], observation[i]) );
 		}
 		return result;
 	}
 	
-	public float logGaussianProbability(float mu, float sigma, float x){
-		return (float) (Math.exp( -( ((x-mu)*(x-mu))/(2*sigma) ) ) / (Math.sqrt(sigma) * Math.sqrt(2*Math.PI)));
+	public double logGaussianProbability(double mu, double sigma, double x){
+		return (double) (Math.exp( -( ((x-mu)*(x-mu))/(2*sigma) ) ) / (Math.sqrt(sigma) * Math.sqrt(2*Math.PI)));
 	}
 	
 	public String toString(){
