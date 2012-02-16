@@ -157,7 +157,9 @@ public class Word {
 		}
 		best_path = path.get(returnstate);
 		probability = max_prob;
-		System.out.println(this.word+" :\t\t\t"+probability);
+		//System.out.println(this.word+" :\t\t\t"+max_prob); // display debug info
+		System.out.print(".");								 // or just a dot (as a sort of progressbar, spinner doesn't work in eclipe (\b and \r are broken, sigh)
+
 		return probability;
 	}
 	
