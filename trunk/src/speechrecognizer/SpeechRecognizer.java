@@ -39,7 +39,7 @@ public class SpeechRecognizer {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		String filename = "tf005416";
+		String filename = "tf000116";
 //		if(args.length < 1) {
 //			// if no filename was given, ask for input of user
 //			BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
@@ -61,7 +61,6 @@ public class SpeechRecognizer {
 			System.out.println("Building a featureset");
 			buildFeatureSet(filename);
 			
-			
 			System.out.println("Building Hidden Markov Models");
 			buildHmms(hmmsMmf, lexiconTxt);
 			
@@ -69,7 +68,7 @@ public class SpeechRecognizer {
 			Word   bestWord  = null;
 			double  bestScore = Double.NEGATIVE_INFINITY;
 		            
-		    for(Word word: words) {
+		    for(Word word: words) {		    	
 		    	double probability = word.viterbi(featureset);
 		    	if(probability > bestScore)
 		    	{
@@ -82,15 +81,6 @@ public class SpeechRecognizer {
 		else {
 			System.out.println("No valid filename was given, please retry");
 		}
-		
-		/* imitate speech_recognizer.py here... how to do command line stuff? */
-		
-		/* 1. somehow build up all phonemes based on hmms.mmf (see phoneme.py)
-		 * 2. build up all words using lexicon.txt
-		 * 3. run word.viterbi(observations) on each word and for each set of
-		 * observations (set of observations is the featureset from mfc files) 
-		 * 4. keep track of the maximum value and which word this is
-		 */
 	}
 	
 	/**
@@ -123,24 +113,6 @@ public class SpeechRecognizer {
 	    			featureset[i][j] = Double.valueOf(timeslices[i*39 + j].trim()).doubleValue();
 	    		}
     		}
-    		/*
-    		int index_time = 0;
-    		featureset = new double[timeslices.length][39];
-    		for(String ts : timeslices) {
-    			ts = ts.replace("\n", "");
-    			ts = ts.trim();
-    			String[] features = ts.split(" ");
-    			int index_feature = 0;
-    			for(String feature : features)
-    			{
-    				featureset[index_time][index_feature] = Double.valueOf(feature.trim()).doubleValue();
-    				index_feature++;
-    			}
-    			
-    			index_time++;
-    		}
-    		*/
-    		System.out.println("Finished building features");
     	}
     	else {
     		System.out.println("Something went wrong with building the features, please retry");
