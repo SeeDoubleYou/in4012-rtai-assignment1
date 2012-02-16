@@ -1,11 +1,17 @@
 package speechrecognizer;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.List;
 
 /**
  * 
@@ -15,7 +21,7 @@ import java.util.Map;
  */
 public class SpeechRecognizer {
 	static String data  	 = "data";
-	static String htk  	 	 = "htk";
+	static String htk  	 	 = "htk/HTKTools";
     static String conf  	 = data + "/hcopy_mfcc.cfg";
     static String hcopy 	 = htk  + "/HCopy";
     static String hlist 	 = htk  + "/HList";
@@ -55,7 +61,7 @@ public class SpeechRecognizer {
 			System.out.println("Building a featureset");
 			buildFeatureSet(filename);
 			
-			/*
+			
 			System.out.println("Building Hidden Markov Models");
 			buildHmms(hmmsMmf, lexiconTxt);
 			
@@ -72,7 +78,6 @@ public class SpeechRecognizer {
 		    	}
 		    }
 		    System.out.println("Best word is " + bestWord.getWord() + " with a probability of " + bestScore);
-			 */
 		}
 		else {
 			System.out.println("No valid filename was given, please retry");
@@ -95,7 +100,7 @@ public class SpeechRecognizer {
 	 */
     public static void extractFeaturesFromAudioFile(String filename) {
     	String source = wav + filename + ".wav";
-    	String target = mfc + filename + ".mfc";
+    	String target = mfc + filename + ".mfc";    	
     	exec(new String[] {hcopy, "-C", conf, source, target});
     }
     
@@ -108,9 +113,10 @@ public class SpeechRecognizer {
     	String[] featuresRV = exec(new String[] {hlist, "-r", mfc + filename});
     	
     	if(featuresRV[0].equals("0")) {
-    		System.out.println("Succesfully build the features");
+    		System.out.println("Building the features..");
     		String[] timeslices = featuresRV[1].split(" ");
     		int index_time = 0;
+    		featureset = new float[timeslices.length][39];
     		for(String ts : timeslices) {
     			ts = ts.replace("\n", "");
     			ts = ts.trim();
@@ -124,6 +130,7 @@ public class SpeechRecognizer {
     			
     			index_time++;
     		}
+    		System.out.println("Finished building features");
     	}
     	else {
     		System.out.println("Something went wrong with building the features, please retry");
@@ -146,12 +153,14 @@ public class SpeechRecognizer {
 	       
 			// construct phonemes
 	        for(String phonemeData: definitions) {
-	        	Phoneme tmp = new Phoneme(phonemeData);
-	        	phonemes.put(tmp.getName(), tmp);
+	        	if (!phonemeData.equals("")) {
+		        	Phoneme tmp = new Phoneme(phonemeData);
+		        	phonemes.put(tmp.getName(), tmp);
+	        	}
 	        }
 	                
 	        // load all data from hmms.mmf
-	        ArrayList<String> lexicon =  (ArrayList<String>) Arrays.asList(readFileAsString(lexiconFilename).split("\n"));
+	        List<String> lexicon = Arrays.asList(readFileAsString(lexiconFilename).split("\n"));
 	        
 	        // remove empty items
 	        Iterator<String> i = lexicon.iterator();
@@ -169,10 +178,13 @@ public class SpeechRecognizer {
 	            	String word = parts[0];
 	            	
 	            	// create phonemes for all but the first entry in parts
-	            	Phoneme[] pns = new Phoneme[parts.length-1];
+	            	ArrayList<Phoneme> pns = new ArrayList<Phoneme>();
+	            	
 	            	for(int j=1; j<parts.length; j++)
 	            	{
-	            		pns[j-1] = phonemes.get(parts[j]);
+	            		if (!parts[j].equals("")) {
+		            		pns.add(phonemes.get(parts[j]));
+	            		}
 	            	}
 	            	words.add(new Word(word, pns));
 	            }
@@ -202,7 +214,6 @@ public class SpeechRecognizer {
     	{
     		arguments += arg + " ";
     	}
-    	System.out.println(arguments);
     	
         Process process;
 		try {
@@ -227,9 +238,6 @@ public class SpeechRecognizer {
 		String[] rv = new String[2];
 		rv[0] = Integer.toString(exitVal);  // the return state of the command (0 if all went well)
 		rv[1] = output;						// possible output of the command
-		
-		System.out.println(exitVal);
-		System.out.println(output);
 		
 		return rv;
     }

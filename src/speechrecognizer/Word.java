@@ -2,6 +2,7 @@ package speechrecognizer;
 
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.Iterator;
 
 /**
  * 
@@ -12,7 +13,9 @@ import java.util.Hashtable;
 public class Word {
 
 	private String word;
-	private Phoneme[] phonemes;
+	
+//	private Phoneme[] phonemes;
+	private ArrayList<Phoneme> phonemes;
 	private ArrayList<State> states = new ArrayList<State>();
 	
 	//transition probabilities.
@@ -22,7 +25,8 @@ public class Word {
 	private ArrayList<State> best_path;
 	private float probability;
 	
-	public Word(String word, Phoneme[] phonemes){
+//	public Word(String word, Phoneme[] phonemes){
+	public Word(String word, ArrayList<Phoneme> phonemes){
 		this.word = word;
 		this.phonemes = phonemes;
 		trps = new Hashtable<Integer, Hashtable<Integer, Float>>();
@@ -33,15 +37,15 @@ public class Word {
 		Hashtable<Integer, Float> hts2;
 		Hashtable<Integer, Float> hts3;
 		
-		for(int i=0; i < phonemes.length; i++){
-			State s2 = phonemes[i].getState(2);
-			State s3 = phonemes[i].getState(3);
-			State s4 = phonemes[i].getState(4);
+		for(int i=0; i < phonemes.size(); i++){
+			State s2 = phonemes.get(i).getState(2);
+			State s3 = phonemes.get(i).getState(3);
+			State s4 = phonemes.get(i).getState(4);
 			states.add( s2 );
 			states.add( s3 );
 			states.add( s4 );
 			
-			float[][] tps = phonemes[i].getTransitionProbabilities();
+			float[][] tps = phonemes.get(i).getTransitionProbabilities();
 			if(temp != -1){
 				try{
 					trps.get(i*3-1).put(i*3, temp);
@@ -142,6 +146,7 @@ public class Word {
 		float max_prob = 0.0f;
 		State returnstate = null;
 		Hashtable<State, Float> probs = V.get(obs.length-1);
+		// TODO why is probs empty?
 		for(State state : states){
 			if(probs.get(state) > max_prob){
 				max_prob = probs.get(state);
@@ -170,7 +175,7 @@ public class Word {
 		return word;
 	}
 	
-	public Phoneme[] getPhonemes(){
+	public ArrayList<Phoneme> getPhonemes(){
 		return phonemes;
 	}
 	
