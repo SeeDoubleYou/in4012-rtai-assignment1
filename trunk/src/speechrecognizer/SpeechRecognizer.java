@@ -30,7 +30,7 @@ public class SpeechRecognizer {
     static String hmmsMmf    = data + "/hmms.mmf";
     static String lexiconTxt = data + "/lexicon.txt";
     
-    static float[][] featureset;
+    static double[][] featureset;
 
     static Hashtable<String, Phoneme> phonemes = new Hashtable<String, Phoneme>();
     static ArrayList<Word> words = new ArrayList<Word>();
@@ -39,7 +39,7 @@ public class SpeechRecognizer {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		String filename = "tf000116";
+		String filename = "tf005416";
 //		if(args.length < 1) {
 //			// if no filename was given, ask for input of user
 //			BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
@@ -67,10 +67,10 @@ public class SpeechRecognizer {
 			
 			System.out.println("Calculating probabilities");
 			Word   bestWord  = null;
-			float  bestScore = 0.0f;
+			double  bestScore = -10000.0f;
 		            
 		    for(Word word: words) {
-		    	float probability = word.viterbi(featureset);
+		    	double probability = word.viterbi(featureset);
 		    	if(probability > bestScore)
 		    	{
 		    		bestWord = word;
@@ -115,8 +115,17 @@ public class SpeechRecognizer {
     	if(featuresRV[0].equals("0")) {
     		System.out.println("Building the features..");
     		String[] timeslices = featuresRV[1].split(" ");
+    		
+    		int tsl = timeslices.length/39;
+    		featureset = new double[tsl][39];
+    		for(int i=0; i<tsl; i++){
+	    		for(int j=0; j<39; j++){
+	    			featureset[i][j] = Double.valueOf(timeslices[i*39 + j].trim()).doubleValue();
+	    		}
+    		}
+    		/*
     		int index_time = 0;
-    		featureset = new float[timeslices.length][39];
+    		featureset = new double[timeslices.length][39];
     		for(String ts : timeslices) {
     			ts = ts.replace("\n", "");
     			ts = ts.trim();
@@ -124,12 +133,13 @@ public class SpeechRecognizer {
     			int index_feature = 0;
     			for(String feature : features)
     			{
-    				featureset[index_time][index_feature] = Float.valueOf(feature.trim()).floatValue();
+    				featureset[index_time][index_feature] = Double.valueOf(feature.trim()).doubleValue();
     				index_feature++;
     			}
     			
     			index_time++;
     		}
+    		*/
     		System.out.println("Finished building features");
     	}
     	else {

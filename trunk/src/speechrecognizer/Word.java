@@ -2,7 +2,6 @@ package speechrecognizer;
 
 import java.util.ArrayList;
 import java.util.Hashtable;
-import java.util.Iterator;
 
 /**
  * 
@@ -19,23 +18,23 @@ public class Word {
 	private ArrayList<State> states = new ArrayList<State>();
 	
 	//transition probabilities.
-	private Hashtable<Integer, Hashtable<Integer, Float>> trps;
+	private Hashtable<Integer, Hashtable<Integer, Double>> trps;
 	
 	// These 2 are only initialized after executing the viterbi algorithm
 	private ArrayList<State> best_path;
-	private float probability;
+	private double probability;
 	
 //	public Word(String word, Phoneme[] phonemes){
 	public Word(String word, ArrayList<Phoneme> phonemes){
 		this.word = word;
 		this.phonemes = phonemes;
-		trps = new Hashtable<Integer, Hashtable<Integer, Float>>();
+		trps = new Hashtable<Integer, Hashtable<Integer, Double>>();
 		
-		float temp = -1;
+		double temp = -1;
 
-		Hashtable<Integer, Float> hts1;
-		Hashtable<Integer, Float> hts2;
-		Hashtable<Integer, Float> hts3;
+		Hashtable<Integer, Double> hts1;
+		Hashtable<Integer, Double> hts2;
+		Hashtable<Integer, Double> hts3;
 		
 		for(int i=0; i < phonemes.size(); i++){
 			State s2 = phonemes.get(i).getState(2);
@@ -45,19 +44,19 @@ public class Word {
 			states.add( s3 );
 			states.add( s4 );
 			
-			float[][] tps = phonemes.get(i).getTransitionProbabilities();
+			double[][] tps = phonemes.get(i).getTransitionProbabilities();
 			if(temp != -1){
 				try{
 					trps.get(i*3-1).put(i*3, temp);
 				}catch(Exception e){ 
-					trps.put(i*3-1, new Hashtable<Integer, Float>()); 
+					trps.put(i*3-1, new Hashtable<Integer, Double>()); 
 					trps.get(i*3-1).put(i*3, temp); 
 				}
 			}
 
-			hts1 = new Hashtable<Integer, Float>();
-			hts2 = new Hashtable<Integer, Float>();
-			hts3 = new Hashtable<Integer, Float>();
+			hts1 = new Hashtable<Integer, Double>();
+			hts2 = new Hashtable<Integer, Double>();
+			hts3 = new Hashtable<Integer, Double>();
 			hts1.put(i*3, tps[1][1]);
 			hts1.put(i*3+1, tps[1][2]);
 			hts1.put(i*3+2, tps[1][3]);
@@ -86,19 +85,19 @@ public class Word {
 	 * @param observations 
 	 * @return probability of the best path given the observations
 	 */
-	public float viterbi(float[][] obs){
-		Hashtable<Integer, Hashtable<State, Float>>   V    = new Hashtable<Integer, Hashtable<State, Float>>();
+	public double viterbi(double[][] obs){
+		Hashtable<Integer, Hashtable<State, Double>>   V    = new Hashtable<Integer, Hashtable<State, Double>>();
 		Hashtable<State,   ArrayList<State>>          path = new Hashtable<State,   ArrayList<State>>();
-		Hashtable<State,   Hashtable<Integer, Float>> ol   = new Hashtable<State,   Hashtable<Integer, Float>>();
+		Hashtable<State,   Hashtable<Integer, Double>> ol   = new Hashtable<State,   Hashtable<Integer, Double>>();
 
-		V.put(0, new Hashtable<State, Float>());
+		V.put(0, new Hashtable<State, Double>());
 		
 		for(State state : states) {
 			V.get(0).put(state, state.observationLikelihood(obs[0]));
 			
 			path.put(state, new ArrayList<State>());
 			path.get(state).add(state);
-			Hashtable<Integer, Float> tempobs = new Hashtable<Integer, Float>();
+			Hashtable<Integer, Double> tempobs = new Hashtable<Integer, Double>();
 			for(int i=0; i<obs.length; i++){
 				tempobs.put(i, state.observationLikelihood(obs[i]));
 			} 
@@ -106,16 +105,16 @@ public class Word {
 		}
 
 		Hashtable<State, ArrayList<State>> newpath;
-		float temp_tp;
+		double temp_tp;
 		
 		for(int i=1; i<obs.length; i++) {
-			V.put(i, new Hashtable<State, Float>());
+			V.put(i, new Hashtable<State, Double>());
 			newpath = new Hashtable<State, ArrayList<State>>();
-			
+
 			for(int s1=0; s1<states.size(); s1++){
 				
 				State temp_state = null;
-				float max_prob = 0.0f;
+				double max_prob = -1000.0f;
 				
 				for(int s2=0; s2<states.size(); s2++){
 					// get transition probability
@@ -123,14 +122,32 @@ public class Word {
 					catch(Exception e){ temp_tp = 0.0f; }
 					if(temp_tp > 0.0f){
 						try{
-							float prob = (float) (Math.log(V.get(i-1).get(states.get(s2)))
+							double f1 = (double) (V.get(i-1).get(states.get(s2)));
+							double f2 = (double) Math.log(temp_tp);
+							double f3 = (double) (ol.get(states.get(s2)).get(i));
+							
+							// TODO actually, we shouldnt take the log of this again...
+							//		but if we dont, things go wrong!
+							if(f1 < 0.0f){ f1 = (double) -Math.log(Math.abs(f1)); }
+							else{ f1 = (double) Math.log(f1); }
+							/*
+							if(f2 < 0.0f){ f2 = (double) -Math.log(Math.abs(f2)); }
+							else{ f2 = (double) Math.log(f2); }
+							
+							if(f3 < 0.0f){ f3 = (double) -Math.log(Math.abs(f3)); }
+							else{ f3 = (double) Math.log(f3); }
+							*/
+							double prob = f1 + f2 + f3;
+							/*double prob = (double) (Math.log(V.get(i-1).get(states.get(s2)))
 										+ Math.log(temp_tp) 
-										+ Math.log(ol.get(states.get(s2)).get(i)));
+										+ Math.log(ol.get(states.get(s2)).get(i)));*/
+							
 							if(prob > max_prob){
 								max_prob = prob;
 								temp_state = states.get(s2);
 							}
-						}catch(Exception e){}
+						}catch(Exception e){
+						}
 					}
 				}
 				if(temp_state != null){
@@ -143,10 +160,9 @@ public class Word {
 			path = newpath;
 		}
 
-		float max_prob = 0.0f;
+		double max_prob = -9999.0f;
 		State returnstate = null;
-		Hashtable<State, Float> probs = V.get(obs.length-1);
-		// TODO why is probs empty?
+		Hashtable<State, Double> probs = V.get(obs.length-1);
 		for(State state : states){
 			if(probs.get(state) > max_prob){
 				max_prob = probs.get(state);
@@ -155,6 +171,7 @@ public class Word {
 		}
 		best_path = path.get(returnstate);
 		probability = max_prob;
+		System.out.println(this.word+" :\t\t\t"+max_prob);
 		return probability;
 	}
 	

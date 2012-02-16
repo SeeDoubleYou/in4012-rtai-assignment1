@@ -10,15 +10,15 @@ public class Phoneme {
 
 	private String name;
 	private State state2, state3, state4;
-	private float[][] transition_probabilities = new float[5][5];
+	private double[][] transition_probabilities = new double[5][5];
 	
 	public Phoneme(String datastring){
 		String[] parts = datastring.split("<");
 		name = parts[0].replace("\n", "").replace("\\", "").replace("\"", "");
 		name = name.trim();
 		
-		float[][] means     = new float[5][39];
-		float[][] variances = new float[5][39];
+		double[][] means     = new double[5][39];
+		double[][] variances = new double[5][39];
         
 		int index = -1;
         for(String part : parts) {
@@ -31,7 +31,7 @@ public class Phoneme {
             	String[] subparts = part.split(" ");            	
             	int subindex = 0;
             	for(String x : subparts) {
-            		means[index][subindex] = Float.valueOf(x.trim()).floatValue();
+            		means[index][subindex] = Double.valueOf(x.trim()).doubleValue();
             		subindex++;
             	}
             }
@@ -41,7 +41,7 @@ public class Phoneme {
             	String[] subparts = part.split(" ");
             	int subindex = 0;
             	for(String x : subparts) {
-            		variances[index][subindex] = Float.valueOf(x.trim()).floatValue();
+            		variances[index][subindex] = Double.valueOf(x.trim()).doubleValue();
             		subindex++;
             	}
             }
@@ -55,7 +55,7 @@ public class Phoneme {
             		line = line.trim();
             		String[] cells = line.split(" ");
             		for(String cell : cells){
-            			transition_probabilities[row][column] = Float.valueOf(cell.trim()).floatValue();
+            			transition_probabilities[row][column] = Double.valueOf(cell.trim()).doubleValue();
             			column++;
             		}
             		column = 0;
@@ -85,7 +85,7 @@ public class Phoneme {
 		}
 	}
 	
-	public float[][] getTransitionProbabilities(){
+	public double[][] getTransitionProbabilities(){
 		return transition_probabilities;
 	}
 	
