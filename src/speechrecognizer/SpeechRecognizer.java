@@ -201,11 +201,8 @@ public class SpeechRecognizer {
 				e.printStackTrace();
 			}
 		}
-<<<<<<< .mine
 		
 		run(getFilename());
-=======
->>>>>>> .r18
 	}
 	
 	/**
