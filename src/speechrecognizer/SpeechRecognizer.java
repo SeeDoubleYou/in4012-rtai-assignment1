@@ -9,11 +9,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 
-import com.csvreader.CsvReader;
 import com.csvreader.CsvWriter;
 
 
@@ -36,7 +36,7 @@ import com.csvreader.CsvWriter;
  */
 public class SpeechRecognizer {
 	static String data  	 = "data";
-	static String htk  	 	 = "htk";
+	static String htk  	 	 = "htk/HTKTools";
     static String conf  	 = data + "/hcopy_mfcc.cfg";
     static String hcopy 	 = htk  + "/HCopy";
     static String hlist 	 = htk  + "/HList";
@@ -57,12 +57,17 @@ public class SpeechRecognizer {
     static String performanceLogFile = "performance.csv";
     static boolean performanceLogExists;
     
+    static int correct = 0;
+    static int total = 0;
+    
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
 	    boolean performanceLogExists = new File(performanceLogFile).exists();
 		performanceLog = new CsvWriter("performance.csv");
+		
+		correct = total = 0;
 		 
 		try {
 			// if the performance logfile didn't already exist then we need to write out the header line
@@ -163,42 +168,61 @@ public class SpeechRecognizer {
 		}
 		
 		if(!filename.equals("")) {
+			long lStartTime = new Date().getTime();
+			 
+		 	System.out.println("\n//////////////////////////////////////////////////");
 			System.out.println("Investigating audiofile: " + filename);
 			extractFeaturesFromAudioFile(filename);
 			
 			System.out.println("Building a featureset");
-			buildFeatureSet(filename);
+			boolean gotFeatureset = buildFeatureSet(filename);
 			
-			System.out.println("Building Hidden Markov Models");
-			buildHmms(hmmsMmf, lexiconTxt);
+			// We dont have to go through all this trouble if we don't have a proper featureset
+			if(gotFeatureset){
 			
-			System.out.println("Calculating probabilities");
-			Word   bestWord  = null;
-			double  bestScore = Double.NEGATIVE_INFINITY;
-		            
-		    for(Word word: words) {		    	
-		    	double probability = word.viterbi(featureset);
-		    	if(probability > bestScore)
-		    	{
-		    		bestWord = word;
-		    		bestScore = probability;
-		    	}
-		    }
-		    String bestLabel = bestWord.getWord();
+				System.out.println("Building Hidden Markov Models");
+				buildHmms(hmmsMmf, lexiconTxt);
+				
+				System.out.println("Calculating probabilities");
+				Word   bestWord  = null;
+				double  bestScore = Double.NEGATIVE_INFINITY;
+			            
+			    for(Word word: words) {		    	
+			    	double probability = word.viterbi(featureset);
+			    	if(probability > bestScore)
+			    	{
+			    		bestWord = word;
+			    		bestScore = probability;
+			    	}
+			    }
+			    String bestLabel = bestWord.getWord();
 		    
-		    System.out.println("\nBest word is " + bestLabel + " with a probability of " + bestScore);
+			    System.out.println("\nBest word is " + bestLabel + " with a probability of " + bestScore);
 		    
-		    try {
-		    	String actualLabel = readFileAsString(label + filename + ".lab").trim();
-				performanceLog.write(filename);
-				performanceLog.write(actualLabel);
-				performanceLog.write(bestWord.getWord());
-				performanceLog.write("" + bestScore);
-				performanceLog.write(actualLabel.equals(bestLabel) ? "1" : "0");
-				performanceLog.endRecord();
-				performanceLog.flush();
-			} catch (IOException e) {
-				e.printStackTrace();
+			    try {
+			    	String actualLabel = readFileAsString(label + filename + ".lab").trim();
+					performanceLog.write(filename);
+					performanceLog.write(actualLabel);
+					performanceLog.write(bestWord.getWord());
+					performanceLog.write("" + bestScore);
+					performanceLog.write(actualLabel.equals(bestLabel) ? "1" : "0");
+					performanceLog.endRecord();
+					performanceLog.flush();
+					System.out.println("Given:\t\t"+actualLabel);
+					System.out.println("Recognized:\t"+bestLabel);
+					if(actualLabel.equals(bestLabel)){ correct++; }
+					total++;
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+
+				long lEndTime = new Date().getTime();
+				 
+				// time difference in seconds
+				float difference = (long)(lEndTime - lStartTime) / (float)1000;
+				 
+				System.out.println("Elapsed seconds: " + difference +" [correct: "+correct+"/"+total+"]");
+			
 			}
 		}
 		
@@ -217,10 +241,13 @@ public class SpeechRecognizer {
     }
     
     /**
-     * Returns a list of vectors where each vector represents a time-slice, 
+     * Creates a list of vectors where each vector represents a time-slice, 
      * containing 39 Decimal objects representing features of that time-slice.
+     * 
+     * @param filename name of the file to extract features from
+     * @return true iff features were succesfully extracted
      */
-    public static void buildFeatureSet(String filename) {
+    public static boolean buildFeatureSet(String filename) {
     	filename += ".mfc";
     	String[] featuresRV = exec(new String[] {hlist, "-r", mfc + filename});
     	
@@ -237,7 +264,9 @@ public class SpeechRecognizer {
     	}
     	else {
     		System.out.println("Something went wrong with building the features, please retry");
+    		return false;
     	}
+    	return true;
     }
     
     /**
