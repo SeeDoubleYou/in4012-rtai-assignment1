@@ -25,7 +25,7 @@ public class Word {
 	private double probability;
 	
 //	public Word(String word, Phoneme[] phonemes){
-	public Word(String word, ArrayList<Phoneme> phonemes){
+	public Word(String word, ArrayList<Phoneme> phonemes) {
 		this.word = word;
 		this.phonemes = phonemes;
 		trps = new Hashtable<Integer, Hashtable<Integer, Double>>();
@@ -36,19 +36,20 @@ public class Word {
 		Hashtable<Integer, Double> hts2;
 		Hashtable<Integer, Double> hts3;
 		
-		for(int i=0; i < phonemes.size(); i++){
+		for(int i=0; i < phonemes.size(); i++) {
 			State s2 = phonemes.get(i).getState(2);
 			State s3 = phonemes.get(i).getState(3);
 			State s4 = phonemes.get(i).getState(4);
-			states.add( s2 );
-			states.add( s3 );
-			states.add( s4 );
+			states.add(s2);
+			states.add(s3);
+			states.add(s4);
 			
 			double[][] tps = phonemes.get(i).getTransitionProbabilities();
-			if(temp != -1){
-				try{
+			if(temp != -1) {
+				try {
 					trps.get(i*3-1).put(i*3, temp);
-				}catch(Exception e){ 
+				}
+				catch(Exception e) { 
 					trps.put(i*3-1, new Hashtable<Integer, Double>()); 
 					trps.get(i*3-1).put(i*3, temp); 
 				}
@@ -69,7 +70,6 @@ public class Word {
 			hts3.put(i*3+1, tps[3][2]);
 			hts3.put(i*3+2, tps[3][3]);
 			
-			
 			trps.put(i*3, hts1);
 			trps.put(i*3+1, hts2);
 			trps.put(i*3+2, hts3);
@@ -85,20 +85,20 @@ public class Word {
 	 * @param observations 
 	 * @return probability of the best path given the observations
 	 */
-	public double viterbi(double[][] obs){
+	public double viterbi(double[][] obs) {
 		
 		// contains mappings from time-order [0,1,2,...,<Ti>,...,obs.length-1] to another Hashtable which contains
 		// mappings from each state <Sx> in the HMM to a probability denoting the highest probability of paths
 		// ending in state <Sx> if we only consider observations [0,1,2,...,<Ti>]
-		Hashtable<Integer, Hashtable<State, Double>>     V = new Hashtable<Integer, Hashtable<State, Double>>();
+		Hashtable<Integer, Hashtable<State, Double>> V = new Hashtable<Integer, Hashtable<State, Double>>();
 		
 		// maps each state <Si> in the HMM to an ordered list of states, 
 		// containing the most likely path (order of states) to end at state <Si>
-		Hashtable<State,   ArrayList<State>>          path = new Hashtable<State,   ArrayList<State>>();
+		Hashtable<State, ArrayList<State>> path = new Hashtable<State, ArrayList<State>>();
 		
 		// ol (observation likelihood) is a helper hashtable to contain observation likelihoods. Each State will
 		// contain a Hashtable mapping time-order to the likelihood that time-instance occurred at that state.
-		Hashtable<State,   Hashtable<Integer, Double>>  ol = new Hashtable<State,   Hashtable<Integer, Double>>();
+		Hashtable<State, Hashtable<Integer, Double>> ol = new Hashtable<State, Hashtable<Integer, Double>>();
 
 		// add new hashtable (that maps states to a probability) for time-instance 0
 		V.put(0, new Hashtable<State, Double>());
@@ -116,13 +116,12 @@ public class Word {
 			// pre-calculate all observation likelihoods (all time-instances for all states)
 			// because this will save a lot of time in the inner of the for-loops later on
 			Hashtable<Integer, Double> tempobs = new Hashtable<Integer, Double>();
-			for(int i=0; i<obs.length; i++){
+			for(int i=0; i<obs.length; i++) {
 				tempobs.put(i, state.observationLikelihood(obs[i]));
 			} 
 			ol.put(state, tempobs);
 		}
 
-		
 		Hashtable<State, ArrayList<State>> newpath;
 		
 		// helper var
@@ -136,24 +135,24 @@ public class Word {
 			// modifying 'path' object (because we need the unmodified <Ti-1> path object for calculations)
 			newpath = new Hashtable<State, ArrayList<State>>();
 
-			for(int s1=0; s1<states.size(); s1++){
-				
+			for(int s1 = 0; s1 < states.size(); s1++) {
 				// helper var to keep track of the state that is most likely to contain the path that continues at s1
 				State temp_state = null;
 				
 				// negative infinity so the first probability when looking for the max will always be larger
 				double max_prob = Double.NEGATIVE_INFINITY;
 				
-				for(int s2=0; s2<states.size(); s2++){
+				for(int s2 = 0; s2 < states.size(); s2++) {
 					try{
 						// get transition probability from s2 to s1
 						temp_tp = trps.get(s2).get(s1);
-					}catch(Exception e){ 
+					}
+					catch(Exception e) { 
 						// if it doesn't exist, p = 0
 						temp_tp = 0.0f;
 					}
 					// if the transition probability is 0, we can just skip this step (since its an impossible sequence)
-					if(temp_tp > 0.0f){
+					if(temp_tp > 0.0f) {
 						try{
 							// calculate probability of the most likely path leading to s1 by trying for every state (s2)
 							// to find the probability if we extend the most likely path to s2 with s1 (i.e. find probabilities
@@ -170,16 +169,17 @@ public class Word {
 											   + (ol.get(states.get(s1)).get(i));   // p3: observation probability of s1
 							
 							// keep track of which path is most likely to lead up to this state
-							if(prob > max_prob){
+							if(prob > max_prob) {
 								max_prob = prob;
 								temp_state = states.get(s2);
 							}
-						}catch(Exception e){}
+						}
+						catch(Exception e) {}
 					}
 				}//END inner for loop
 				
 				// just a precaution to make sure we do have a valid path
-				if(temp_state != null){
+				if(temp_state != null) {
 					// get the hashmap at the current timeinstance <Ti> and put the 
 					// probability of the most likely path ending at s1 in <Ti>
 					V.get(i).put(states.get(s1), max_prob);
@@ -204,8 +204,8 @@ public class Word {
 
 		// get the probabilities for each end-state at the last time-instance in V.
 		Hashtable<State, Double> probs = V.get(obs.length-1);
-		for(State state : states){
-			if(probs.get(state) > max_prob){
+		for(State state : states) {
+			if(probs.get(state) > max_prob) {
 				max_prob = probs.get(state);
 				returnstate = state;
 			}
@@ -219,28 +219,30 @@ public class Word {
 		return probability;
 	}
 	
-	public ArrayList<State> getBestPath(){
+	public ArrayList<State> getBestPath() {
 		return best_path;
 	}
 	
 	public State getFirstState(){
-		if(states.isEmpty()){ return null; }
+		if(states.isEmpty()) { 
+			return null; 
+		}
 		return states.get(0);
 	}
 	
-	public ArrayList<State> getStates(){
+	public ArrayList<State> getStates() {
 		return states;
 	}
 	
-	public String getWord(){
+	public String getWord() {
 		return word;
 	}
 	
-	public ArrayList<Phoneme> getPhonemes(){
+	public ArrayList<Phoneme> getPhonemes() {
 		return phonemes;
 	}
 	
-	public String toString(){
+	public String toString() {
 		return word;
 	}
 }
