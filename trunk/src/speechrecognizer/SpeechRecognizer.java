@@ -91,6 +91,10 @@ public class SpeechRecognizer {
 		}
 		
 		// filenames.add("tm001616"); // EASY DEBUG
+
+		// only have to do this once!
+		System.out.println("Building Hidden Markov Models");
+		buildHmms(hmmsMmf, lexiconTxt);
 		
 		run(getFilename());
 	}
@@ -170,18 +174,14 @@ public class SpeechRecognizer {
 		if(!filename.equals("")) {
 			long lStartTime = new Date().getTime();
 			 
-		 	System.out.println("\n//////////////////////////////////////////////////");
+		 	System.out.println("\n/////////////////////////////////////////////////////////////");
 			System.out.println("Investigating audiofile: " + filename);
 			extractFeaturesFromAudioFile(filename);
-			
-			System.out.println("Building a featureset");
+
 			boolean gotFeatureset = buildFeatureSet(filename);
 			
 			// We dont have to go through all this trouble if we don't have a proper featureset
 			if(gotFeatureset){
-			
-				System.out.println("Building Hidden Markov Models");
-				buildHmms(hmmsMmf, lexiconTxt);
 				
 				System.out.println("Calculating probabilities");
 				Word   bestWord  = null;
@@ -264,6 +264,7 @@ public class SpeechRecognizer {
     	}
     	else {
     		System.out.println("Something went wrong with building the features, please retry");
+    		System.out.println("-------------------------------------------------------------");
     		return false;
     	}
     	return true;
