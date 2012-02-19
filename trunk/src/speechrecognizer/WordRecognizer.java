@@ -95,7 +95,7 @@ public class WordRecognizer {
      * containing 39 Decimal objects representing features of that time-slice.
      * 
      * @param filename name of the file to extract features from
-     * @return true iff features were succesfully extracted
+     * @return true whether features were successfully extracted
      */
     public boolean buildFeatureSet(String filename) {
     	filename += ".mfc";
