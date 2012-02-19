@@ -117,7 +117,7 @@ public class Word {
 				double max_prob = Double.NEGATIVE_INFINITY;
 				
 				for(int s2=0; s2<states.size(); s2++){
-					// get transition probability (if it doesnt exist, p = 0)
+					// get transition probability (if it doesn't exist, p = 0)
 					try{ 
 						temp_tp = trps.get(s2).get(s1);
 					}catch(Exception e){ 
@@ -126,8 +126,8 @@ public class Word {
 					if(temp_tp > 0.0f){
 						try{
 							double prob = (double) (V.get(i-1).get(states.get(s2)))	// probability so far
-											 + Math.log(temp_tp) 					// transition probability from s2 to s1
-												 + (ol.get(states.get(s1)).get(i)); // observation probability of s1
+											   + Math.log(temp_tp) 					// transition probability from s2 to s1
+											   + (ol.get(states.get(s1)).get(i));   // observation probability of s1
 							
 							// keep track of which state is most probably next in this path
 							if(prob > max_prob){
@@ -141,8 +141,7 @@ public class Word {
 				if(temp_state != null){
 					V.get(i).put(states.get(s1), max_prob);
 					
-					// NB: instead of previous code: we add a cloned copy, because
-					// we should not add s1 to the list in path.get(temp_state).
+					@SuppressWarnings("unchecked") // it isn't even unchecked ?
 					ArrayList<State> templist = (ArrayList<State>) path.get(temp_state).clone();
 					templist.add(states.get(s1));
 					newpath.put(states.get(s1), templist);
