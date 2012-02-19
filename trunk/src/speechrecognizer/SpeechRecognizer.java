@@ -5,7 +5,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,18 +15,16 @@ import java.util.List;
 
 import com.csvreader.CsvWriter;
 
-
 /**
  * Speech recognizer for a certain given set of files (see data folder).
  * It will parse given files. Files can be given as command line parameters, or
  * if no argument was given trough a prompt. You can do several files at once
- * by given ech filename seperated by a space. You could also say "all" 
- * (without the quotes of couorse) to parse all words.
+ * by given each filename separated by a space. You could also say "all" 
+ * (without the quotes of course) to parse all words.
  * 
- * Entering "exit" wil quit the
- * program.
+ * Entering "exit" will quit the program.
  * 
- * A log is created (comma seperated) so performance can be checked.
+ * A log is created (comma separated) so performance can be checked.
  * @see http://javacsv.sourceforge.net/
  * 
  * @author Chris van Egmond
@@ -37,39 +34,35 @@ import com.csvreader.CsvWriter;
 public class SpeechRecognizer {
 	static String data  	 = "data";
 	static String htk  	 	 = "htk/HTKTools";
-    static String conf  	 = data + "/hcopy_mfcc.cfg";
-    static String hcopy 	 = htk  + "/HCopy";
-    static String hlist 	 = htk  + "/HList";
-    static String mfc   	 = data + "/mfc/";
     static String wav   	 = data + "/wav/";
-    static String label	 	 = data + "/label/";
     static String hmmsMmf    = data + "/hmms.mmf";
     static String lexiconTxt = data + "/lexicon.txt";
     
-    static double[][] featureset;
-
     static Hashtable<String, Phoneme> phonemes = new Hashtable<String, Phoneme>();
     static ArrayList<Word> words = new ArrayList<Word>();
     
     static ArrayList<String> filenames = new ArrayList<String>();
 
-    static CsvWriter performanceLog; // file to keep track of performance (best to delete before an "all" run 
-    static String performanceLogFile = "performance.csv";
-    static boolean performanceLogExists;
-    
     static int correct = 0;
     static int total = 0;
+    
+    public static CsvWriter performanceLog; // file to keep track of performance (best to delete before an "all" run 
+	public static String performanceLogFile = "performance.csv";
+	public static boolean performanceLogExists;
     
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
-
 		boolean performanceLogExists = new File(performanceLogFile).exists();
 		performanceLog = new CsvWriter("performance.csv");
 		
 		correct = total = 0;
 		 
+		if(args.length > 0) {
+			addFileNames(args);
+		}
+		
 		try {
 			// if the performance logfile didn't already exist then we need to write out the header line
 			// else assume that the file already has the correct header line
@@ -87,17 +80,43 @@ public class SpeechRecognizer {
 			e.printStackTrace();
 		}
 		
-		if(args.length > 0) {
-			addFileNames(args);
-		}
-		
 		// filenames.add("tm001616"); // EASY DEBUG
 
 		// only have to do this once!
 		System.out.println("Building Hidden Markov Models");
 		buildHmms(hmmsMmf, lexiconTxt);
 		
-		run(getFilename());
+		run();
+	}
+	
+	public static void run() {
+		String filename = getFilename();
+		
+		if(filename.equals("exit")) {
+	        performanceLog.close();
+			System.exit(0);
+		}
+		
+		if(!filename.equals("")) {
+			long lStartTime = new Date().getTime();
+			WordRecognizer wr = new WordRecognizer(filename);
+			if(wr.run()) {
+				correct++;
+			}
+			long lEndTime = new Date().getTime();
+			
+			// time difference in seconds
+			float difference = (long)(lEndTime - lStartTime) / (float)1000;
+
+			System.out.println("Elapsed seconds: " + difference + " [correct: " + correct + "/" + total + "]");
+			
+			total++;
+
+			wr = null;
+			System.gc();
+		}
+		
+		run();
 	}
 	
 	/**
@@ -125,7 +144,7 @@ public class SpeechRecognizer {
 	/**
 	 * Get the next filename in line to parse.
 	 * If no filename is available, ask user for input.
-	 * If user sets "all", then al files in wav folder are added
+	 * If user sets "all", then all files in wav folder are added
 	 * @return filename
 	 */
 	public static String getFilename() {
@@ -166,112 +185,7 @@ public class SpeechRecognizer {
 		return filename;
 	}
 	
-	public static void run(String filename) {
-		if(filename.equals("exit")) {
-	        performanceLog.close();
-			System.exit(0);
-		}
-		
-		if(!filename.equals("")) {
-			long lStartTime = new Date().getTime();
-			 
-		 	System.out.println("\n/////////////////////////////////////////////////////////////");
-			System.out.println("Investigating audiofile: " + filename);
-			extractFeaturesFromAudioFile(filename);
-
-			boolean gotFeatureset = buildFeatureSet(filename);
-			
-			// We dont have to go through all this trouble if we don't have a proper featureset
-			if(gotFeatureset){
-				
-				System.out.println("Calculating probabilities");
-				Word   bestWord  = null;
-				double  bestScore = Double.NEGATIVE_INFINITY;
-			            
-			    for(Word word: words) {		    	
-			    	double probability = word.viterbi(featureset);
-			    	if(probability > bestScore)
-			    	{
-			    		bestWord = word;
-			    		bestScore = probability;
-			    	}
-			    }
-			    String bestLabel = bestWord.getWord();
-		    
-			    System.out.println("\nBest word is " + bestLabel + " with a probability of " + bestScore);
-		    
-			    try {
-			    	String actualLabel = readFileAsString(label + filename + ".lab").trim();
-					performanceLog.write(filename);
-					performanceLog.write(actualLabel);
-					performanceLog.write(bestWord.getWord());
-					performanceLog.write("" + bestScore);
-					performanceLog.write(actualLabel.equals(bestLabel) ? "1" : "0");
-					performanceLog.endRecord();
-					performanceLog.flush();
-					System.out.println("Given:\t\t"+actualLabel);
-					System.out.println("Recognized:\t"+bestLabel);
-					if(actualLabel.equals(bestLabel)){ correct++; }
-					total++;
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-
-				long lEndTime = new Date().getTime();
-				 
-				// time difference in seconds
-				float difference = (long)(lEndTime - lStartTime) / (float)1000;
-				 
-				System.out.println("Elapsed seconds: " + difference +" [correct: "+correct+"/"+total+"]");
-			
-			}
-		}
-		
-		run(getFilename());
-	}
-	
 	/**
-	 * Extract features. It will create a .mfc file for it
-	 * 
-	 * @param fname The name of the file (without extension)
-	 */
-    public static void extractFeaturesFromAudioFile(String filename) {
-    	String source = wav + filename + ".wav";
-    	String target = mfc + filename + ".mfc";    	
-    	exec(new String[] {hcopy, "-C", conf, source, target});
-    }
-    
-    /**
-     * Creates a list of vectors where each vector represents a time-slice, 
-     * containing 39 Decimal objects representing features of that time-slice.
-     * 
-     * @param filename name of the file to extract features from
-     * @return true iff features were succesfully extracted
-     */
-    public static boolean buildFeatureSet(String filename) {
-    	filename += ".mfc";
-    	String[] featuresRV = exec(new String[] {hlist, "-r", mfc + filename});
-    	
-    	if(featuresRV[0].equals("0")) {
-    		String[] timeslices = featuresRV[1].split(" ");
-    		
-    		int tsl = timeslices.length/39;
-    		featureset = new double[tsl][39];
-    		for(int i=0; i<tsl; i++){
-	    		for(int j=0; j<39; j++){
-	    			featureset[i][j] = Double.valueOf(timeslices[i*39 + j].trim()).doubleValue();
-	    		}
-    		}
-    	}
-    	else {
-    		System.out.println("Something went wrong with building the features, please retry");
-    		System.out.println("-------------------------------------------------------------");
-    		return false;
-    	}
-    	return true;
-    }
-    
-    /**
      * Builds HMMs for every word in the lexicon.
      * 
      * @param definitionFilename path to hmms.hmmf, contains phoneme descriptions
@@ -330,60 +244,13 @@ public class SpeechRecognizer {
     }
     
     /**
-     * Execute a system function
-     * 
-     * @param 	cmd
-     * @return 	An array containing the return value and output
-     */
-    public static String[] exec(String[] args) {
-    	Runtime RT = Runtime.getRuntime();
-    	int exitVal = -1;
-    	String output = "";
-    	
-    	ProcessBuilder builder = new ProcessBuilder(args);
-    	builder.directory(new File(new File(".").getAbsolutePath()));
-
-    	String arguments = "";
-    	for(String arg: args)
-    	{
-    		arguments += arg + " ";
-    	}
-    	
-        Process process;
-		try {
-			process = builder.start();
-			InputStream is = process.getInputStream();
-			InputStreamReader isr = new InputStreamReader(is);
-			BufferedReader br = new BufferedReader(isr);
-			String line;
-			while ((line = br.readLine()) != null) {
-				output += line;
-			}
-			
-			try {
-				exitVal = process.waitFor();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-        
-		String[] rv = new String[2];
-		rv[0] = Integer.toString(exitVal);  // the return state of the command (0 if all went well)
-		rv[1] = output;						// possible output of the command
-		
-		return rv;
-    }
-    
-    /**
      * Read a file and return contents as a String
      * 
      * @param filePath
      * @return
      * @throws java.io.IOException
      */
-    private static String readFileAsString(String filePath) throws java.io.IOException{
+    public static String readFileAsString(String filePath) throws java.io.IOException{
         byte[] buffer = new byte[(int) new File(filePath).length()];
         BufferedInputStream f = null;
         try {
