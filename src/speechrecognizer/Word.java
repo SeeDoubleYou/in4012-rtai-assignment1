@@ -118,13 +118,18 @@ public class Word {
 				
 				for(int s2=0; s2<states.size(); s2++){
 					// get transition probability (if it doesnt exist, p = 0)
-					try{ temp_tp = trps.get(s1).get(s2); }
-					catch(Exception e){ temp_tp = 0.0f; }
+					try{ 
+						//temp_tp = trps.get(s1).get(s2);
+						temp_tp = trps.get(s2).get(s1); // HAD THIS THE WRONG WAY AROUND
+					}catch(Exception e){ 
+						temp_tp = 0.0f;
+					}
 					if(temp_tp > 0.0f){
 						try{
 							double f1 = (double) (V.get(i-1).get(states.get(s2)));
 							double f2 = (double) Math.log(temp_tp);
-							double f3 = (double) (ol.get(states.get(s2)).get(i));
+							//double f3 = (double) (ol.get(states.get(s2)).get(i));
+							double f3 = (double) (ol.get(states.get(s1)).get(i)); // THIS WAS WRONG AS WELL I THINK
 							
 							double prob = f1 + f2 + f3;
 							
@@ -138,8 +143,15 @@ public class Word {
 				}
 				if(temp_state != null){
 					V.get(i).put(states.get(s1), max_prob);
-					path.get(temp_state).add(states.get(s1));
-					newpath.put(states.get(s1), path.get(temp_state));
+					
+					//path.get(temp_state).add(states.get(s1));
+					//newpath.put(states.get(s1), path.get(temp_state));
+					
+					// NB: instead of above piece of code: we should add a cloned copy, because
+					// we should NOT add s1 to the list in path.get(temp_state).
+					ArrayList<State> templist = (ArrayList<State>) path.get(temp_state).clone();
+					templist.add(states.get(s1));
+					newpath.put(states.get(s1), templist);
 				}
 			}
 			// no need to remember old path
@@ -157,8 +169,9 @@ public class Word {
 		}
 		best_path = path.get(returnstate);
 		probability = max_prob;
-		//System.out.println(this.word+" :\t\t\t"+max_prob); // display debug info
-		System.out.print(".");								 // or just a dot (as a sort of progressbar, spinner doesn't work in eclipe (\b and \r are broken, sigh)
+		
+		// show a dot (as a sort of progressbar, spinner doesn't work in eclipe (\b and \r are broken, sigh)
+		System.out.print(".");
 
 		return probability;
 	}

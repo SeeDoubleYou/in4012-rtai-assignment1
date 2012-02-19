@@ -64,7 +64,8 @@ public class SpeechRecognizer {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-	    boolean performanceLogExists = new File(performanceLogFile).exists();
+
+		boolean performanceLogExists = new File(performanceLogFile).exists();
 		performanceLog = new CsvWriter("performance.csv");
 		
 		correct = total = 0;
