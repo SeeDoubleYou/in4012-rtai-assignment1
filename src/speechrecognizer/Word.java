@@ -86,9 +86,9 @@ public class Word {
 	 * @return probability of the best path given the observations
 	 */
 	public double viterbi(double[][] obs){
-		Hashtable<Integer, Hashtable<State, Double>>   V    = new Hashtable<Integer, Hashtable<State, Double>>();
+		Hashtable<Integer, Hashtable<State, Double>>     V = new Hashtable<Integer, Hashtable<State, Double>>();
 		Hashtable<State,   ArrayList<State>>          path = new Hashtable<State,   ArrayList<State>>();
-		Hashtable<State,   Hashtable<Integer, Double>> ol   = new Hashtable<State,   Hashtable<Integer, Double>>();
+		Hashtable<State,   Hashtable<Integer, Double>>  ol = new Hashtable<State,   Hashtable<Integer, Double>>();
 
 		V.put(0, new Hashtable<State, Double>());
 		
@@ -141,7 +141,6 @@ public class Word {
 				if(temp_state != null){
 					V.get(i).put(states.get(s1), max_prob);
 					
-					@SuppressWarnings("unchecked") // it isn't even unchecked ?
 					ArrayList<State> templist = (ArrayList<State>) path.get(temp_state).clone();
 					templist.add(states.get(s1));
 					newpath.put(states.get(s1), templist);

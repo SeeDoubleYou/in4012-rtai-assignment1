@@ -89,9 +89,13 @@ public class SpeechRecognizer {
 		run();
 	}
 	
+	/**
+	 * Run the SpeechRecognizer.
+	 */
 	public static void run() {
 		String filename = getFilename();
 		
+		// exit gracefully
 		if(filename.equals("exit")) {
 	        performanceLog.close();
 			System.exit(0);
@@ -112,6 +116,7 @@ public class SpeechRecognizer {
 			
 			total++;
 
+			// Force a garbage collection cleanup
 			wr = null;
 			System.gc();
 		}
