@@ -84,8 +84,10 @@ public class WordRecognizer {
 	 */
     public void extractFeaturesFromAudioFile(String filename) {
     	String source = wav + filename + ".wav";
-    	String target = mfc + filename + ".mfc";    	
-    	exec(new String[] {hcopy, "-C", conf, source, target});
+    	String target = mfc + filename + ".mfc";   
+    	if(!new File(target).exists()) {
+    		exec(new String[] {hcopy, "-C", conf, source, target});
+    	}
     }
     
     /**
