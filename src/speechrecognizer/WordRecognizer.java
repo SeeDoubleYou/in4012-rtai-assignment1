@@ -73,7 +73,7 @@ public class WordRecognizer {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-		}
+		}else{ SpeechRecognizer.corrupt++; }
 		return isCorrect;
 	}
 	

@@ -43,8 +43,9 @@ public class SpeechRecognizer {
     
     static ArrayList<String> filenames = new ArrayList<String>();
 
-    static int correct = 0;
     static int total = 0;
+    static int correct = 0;
+    static int corrupt = 0;
     
     public static CsvWriter performanceLog; // file to keep track of performance (best to delete before an "all" run 
 	public static String performanceLogFile = "performance.csv";
@@ -57,7 +58,7 @@ public class SpeechRecognizer {
 		boolean performanceLogExists = new File(performanceLogFile).exists();
 		performanceLog = new CsvWriter("performance.csv");
 		
-		correct = total = 0;
+		correct = corrupt = total = 0;
 		 
 		if(args.length > 0) {
 			addFileNames(args);
@@ -112,9 +113,8 @@ public class SpeechRecognizer {
 			// time difference in seconds
 			float difference = (long)(lEndTime - lStartTime) / (float)1000;
 
-			System.out.println("Elapsed seconds: " + difference + " [correct: " + correct + "/" + total + "]");
-			
-			total++;
+			System.out.println("Elapsed time: " + difference + "s, correct classifications: [" 
+							 + correct + "/" + total + "], " + corrupt + " corrupt files");
 
 			// Force a garbage collection cleanup
 			wr = null;
