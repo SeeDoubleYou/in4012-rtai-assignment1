@@ -110,8 +110,9 @@ public class Word {
 			
 			// each state <Sx> will get a list of most probable paths ending in <Sx>. Because we have
 			// only yet analyzed <T0> at this point, the most likely path ending in <Sx> is itself: [<Sx>]
-			path.put(state, new ArrayList<State>());
-			path.get(state).add(state);
+			ArrayList<State> stateList = new ArrayList<State>();
+			stateList.add(state);
+			path.put(state, stateList);
 			
 			// pre-calculate all observation likelihoods (all time-instances for all states)
 			// because this will save a lot of time in the inner of the for-loops later on
