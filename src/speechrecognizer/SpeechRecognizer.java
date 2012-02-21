@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
 
 import com.csvreader.CsvWriter;
@@ -51,6 +50,7 @@ public class SpeechRecognizer {
 	public static String performanceLogFile = "performance.csv";
 	public static boolean performanceLogExists;
     
+	
 	/**
 	 * @param args
 	 */
@@ -81,7 +81,7 @@ public class SpeechRecognizer {
 			e.printStackTrace();
 		}
 		
-		// filenames.add("tm001616"); // EASY DEBUG
+		filenames.add("tm001616"); // EASY DEBUG
 
 		// only have to do this once!
 		System.out.println("Building Hidden Markov Models");
@@ -102,7 +102,7 @@ public class SpeechRecognizer {
 			System.exit(0);
 		}
 		
-		if(!filename.equals("")) {
+		if(!filename.isEmpty()) {
 			long lStartTime = new Date().getTime();
 			WordRecognizer wr = new WordRecognizer(filename);
 			if(wr.run()) {
@@ -202,45 +202,39 @@ public class SpeechRecognizer {
 		try {
 			definitions = readFileAsString(definitionFilename).split("~h");
 	    
-			phonemes = new Hashtable<String, Phoneme>();
-	       
 			// construct phonemes
 	        for(String phonemeData: definitions) {
-	        	if (!phonemeData.equals("")) {
-		        	Phoneme tmp = new Phoneme(phonemeData);
+	        	if (!phonemeData.isEmpty()) {
+	        		Phoneme tmp = new Phoneme(phonemeData);
 		        	phonemes.put(tmp.getName(), tmp);
 	        	}
 	        }
-	                
+	        
 	        // load all data from hmms.mmf
 	        List<String> lexicon = Arrays.asList(readFileAsString(lexiconFilename).split("\n"));
 	        
-	        // remove empty items
-	        Iterator<String> i = lexicon.iterator();
-	        while (i.hasNext())
+	        for(String s : lexicon)
 	        {
-	            String s = i.next();
-	            if (s == null || s.isEmpty())
+	            if (s.isEmpty())
 	            {
-	                i.remove();
+	                continue;
 	            }
-	            else
-	            {
-	            	String[] parts = s.split(" ");
-	            	// parts = ["woord", "w", "oo", "r", "d"]
-	            	String word = parts[0];
-	            	
-	            	// create phonemes for all but the first entry in parts
-	            	ArrayList<Phoneme> pns = new ArrayList<Phoneme>();
-	            	
-	            	for(int j=1; j<parts.length; j++)
-	            	{
-	            		if (!parts[j].equals("")) {
-		            		pns.add(phonemes.get(parts[j]));
-	            		}
-	            	}
-	            	words.add(new Word(word, pns));
-	            }
+	            
+            	String[] parts = s.split(" ");
+            	
+            	// parts = ["woord", "w", "oo", "r", "d"]
+            	String word = parts[0];
+            	
+            	// create phonemes for all but the first entry in parts
+            	ArrayList<Phoneme> pns = new ArrayList<Phoneme>();
+            	for(int j=1; j<parts.length; j++)
+            	{
+            		if (!parts[j].isEmpty()) {
+	            		pns.add(phonemes.get(parts[j]));
+            		}
+            	}
+            	
+            	words.add(new Word(word, pns));
 	        }
 	        
 		} catch (IOException e) {

@@ -10,16 +10,18 @@ import com.csvreader.CsvWriter;
 
 public class WordRecognizer {
 	private String filename;
-	private double[][] featureset;
+	private double[][] observations;
 	
-	private static String data   = "data";
-	private static String htk  	 = "htk/HTKTools";
-	private static String conf   = data + "/hcopy_mfcc.cfg";
-	private static String hcopy  = htk  + "/HCopy";
-	private static String hlist  = htk  + "/HList";
-	private static String mfc    = data + "/mfc/";
-	private static String wav    = data + "/wav/";
-	private static String label	 = data + "/label/";
+	private static final String data   = "data";
+	private static final String htk  	 = "htk/HTKTools";
+	private static final String conf   = data + "/hcopy_mfcc.cfg";
+	private static final String hcopy  = htk  + "/HCopy";
+	private static final String hlist  = htk  + "/HList";
+	private static final String mfc    = data + "/mfc/";
+	private static final String wav    = data + "/wav/";
+	private static final String label	 = data + "/label/";
+	
+	private static final int nrFeatures = 39;
 	
 	public static CsvWriter performanceLog;
     
@@ -30,20 +32,20 @@ public class WordRecognizer {
 	public Boolean run() {
 	 	System.out.println("\n/////////////////////////////////////////////////////////////");
 		System.out.println("Investigating audiofile: " + filename);
-		extractFeaturesFromAudioFile(filename);
+		buildMFCFileFromAudio(filename);
 
-		boolean gotFeatureset = buildFeatureSet(filename);
+		boolean gotObservations = buildObservations(filename);
 		boolean isCorrect = false;
 		
 		// We don't have to go through all this trouble if we don't have a proper featureset
-		if(gotFeatureset){
+		if(gotObservations){
 			
 			System.out.println("Calculating probabilities");
 			Word   bestWord  = null;
 			double  bestScore = Double.NEGATIVE_INFINITY;
 		            
 		    for(Word word: SpeechRecognizer.words) {		    	
-		    	double probability = word.viterbi(featureset);
+		    	double probability = word.viterbi(observations);
 		    	if(probability > bestScore)
 		    	{
 		    		bestWord = word;
@@ -78,11 +80,11 @@ public class WordRecognizer {
 	}
 	
 	/**
-	 * Extract features. It will create a .mfc file for it
+	 * Extract features and create a .mfc file for it
 	 * 
 	 * @param fname The name of the file (without extension)
 	 */
-    public void extractFeaturesFromAudioFile(String filename) {
+    public void buildMFCFileFromAudio(String filename) {
     	String source = wav + filename + ".wav";
     	String target = mfc + filename + ".mfc";   
     	if(!new File(target).exists()) {
@@ -97,18 +99,19 @@ public class WordRecognizer {
      * @param filename name of the file to extract features from
      * @return true whether features were successfully extracted
      */
-    public boolean buildFeatureSet(String filename) {
+    public boolean buildObservations(String filename) {
     	filename += ".mfc";
     	String[] featuresRV = exec(new String[] {hlist, "-r", mfc + filename});
     	
     	if(featuresRV[0].equals("0")) {
     		String[] timeslices = featuresRV[1].split(" ");
     		
-    		int tsl = timeslices.length/39;
-    		featureset = new double[tsl][39];
-    		for(int i=0; i<tsl; i++){
-	    		for(int j=0; j<39; j++){
-	    			featureset[i][j] = Double.valueOf(timeslices[i*39 + j].trim()).doubleValue();
+    		int nrTimeslices = timeslices.length / nrFeatures;
+    		observations = new double[nrTimeslices][nrFeatures];
+    		
+    		for(int i = 0; i < nrTimeslices; i++) {
+	    		for(int j = 0; j < nrFeatures; j++) {
+	    			observations[i][j] = Double.valueOf(timeslices[i * nrFeatures + j].trim()).doubleValue();
 	    		}
     		}
     	}
@@ -119,7 +122,6 @@ public class WordRecognizer {
     	}
     	return true;
     }
-    
     
     /**
      * Execute a system function
@@ -159,5 +161,31 @@ public class WordRecognizer {
 		rv[1] = output;						// possible output of the command
 		
 		return rv;
+    }
+    
+    /**
+     * Print a String Array for debugging
+     * 
+     * @param array
+     */
+    public void printStringArray(String[] array) {
+    	for (int i=0; i < array.length; i++) {
+    		System.out.print(" " + array[i]);
+    	}
+    	System.out.println("");
+    }
+    
+    /**
+     * Print a 2D String Array for debugging
+     * 
+     * @param array
+     */
+    public void print2DStringArray(String[][] array) {
+    	for (int i=0; i < array.length; i++) {
+    		for (int j=0; j < array[i].length; j++) {
+    			System.out.print(" " + array[i][j]);
+    		}
+    		System.out.println("");
+    	}
     }
 }
