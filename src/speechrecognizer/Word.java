@@ -77,6 +77,10 @@ public class Word {
 			temp = tps[3][4];
 		}
 	}
+	
+	public void viterbi2(double[] observations) {
+		
+	}
 
 	/**
 	 * Takes a set of observations and calculates the most likely path through my states, 
@@ -87,17 +91,23 @@ public class Word {
 	 */
 	public double viterbi(double[][] obs) {
 		
-		// contains mappings from time-order [0,1,2,...,<Ti>,...,obs.length-1] to another Hashtable which contains
-		// mappings from each state <Sx> in the HMM to a probability denoting the highest probability of paths
-		// ending in state <Sx> if we only consider observations [0,1,2,...,<Ti>]
+		/**
+		 * contains mappings from time-order [0,1,2,...,<Ti>,...,obs.length-1] to another Hashtable which contains
+		 * mappings from each state <Sx> in the HMM to a probability denoting the highest probability of paths
+		 * ending in state <Sx> if we only consider observations [0,1,2,...,<Ti>]
+		 */
 		Hashtable<Integer, Hashtable<State, Double>> V = new Hashtable<Integer, Hashtable<State, Double>>();
 		
-		// maps each state <Si> in the HMM to an ordered list of states, 
-		// containing the most likely path (order of states) to end at state <Si>
+		/** 
+		 * maps each state <Si> in the HMM to an ordered list of states, 
+		 * containing the most likely path (order of states) to end at state <Si>
+		 */
 		Hashtable<State, ArrayList<State>> path = new Hashtable<State, ArrayList<State>>();
 		
-		// ol (observation likelihood) is a helper hashtable to contain observation likelihoods. Each State will
-		// contain a Hashtable mapping time-order to the likelihood that time-instance occurred at that state.
+		/**
+		 * ol (observation likelihood) is a helper hashtable to contain observation likelihoods. Each State will
+		 * contain a Hashtable mapping time-order to the likelihood that time-instance occurred at that state.
+		 */
 		Hashtable<State, Hashtable<Integer, Double>> ol = new Hashtable<State, Hashtable<Integer, Double>>();
 
 		// add new hashtable (that maps states to a probability) for time-instance 0
@@ -123,6 +133,10 @@ public class Word {
 			ol.put(state, tempobs);
 		}
 
+		/** 
+		 * helper variable representing an updated version (for <Ti>) of the 'path' object without actually
+		 * modifying 'path' object (because we need the unmodified <Ti-1> path object for calculations)
+		 */
 		Hashtable<State, ArrayList<State>> newpath;
 		
 		// helper var
@@ -132,12 +146,12 @@ public class Word {
 		for(int i=1; i<obs.length; i++) {
 			V.put(i, new Hashtable<State, Double>());
 			
-			// helper variable representing an updated version (for <Ti>) of the 'path' object without actually
-			// modifying 'path' object (because we need the unmodified <Ti-1> path object for calculations)
 			newpath = new Hashtable<State, ArrayList<State>>();
 
 			for(int s1 = 0; s1 < states.size(); s1++) {
-				// helper var to keep track of the state that is most likely to contain the path that continues at s1
+				/**
+				 *  helper var to keep track of the state that is most likely to contain the path that continues at s1
+				 */
 				State temp_state = null;
 				
 				// negative infinity so the first probability when looking for the max will always be larger
@@ -152,6 +166,7 @@ public class Word {
 						// if it doesn't exist, p = 0
 						temp_tp = 0.0f;
 					}
+					
 					// if the transition probability is 0, we can just skip this step (since its an impossible sequence)
 					if(temp_tp > 0.0f) {
 						try{
