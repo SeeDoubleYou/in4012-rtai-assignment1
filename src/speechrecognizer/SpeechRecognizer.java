@@ -81,7 +81,7 @@ public class SpeechRecognizer {
 			e.printStackTrace();
 		}
 		
-		filenames.add("tm001616"); // EASY DEBUG
+		//filenames.add("tm001616"); // EASY DEBUG
 
 		// only have to do this once!
 		System.out.println("Building Hidden Markov Models");
@@ -227,13 +227,14 @@ public class SpeechRecognizer {
             	
             	// create phonemes for all but the first entry in parts
             	ArrayList<Phoneme> pns = new ArrayList<Phoneme>();
+            	pns.add(phonemes.get("sil"));
             	for(int j=1; j<parts.length; j++)
             	{
             		if (!parts[j].isEmpty()) {
 	            		pns.add(phonemes.get(parts[j]));
             		}
             	}
-            	
+            	pns.add(phonemes.get("sil"));
             	words.add(new Word(word, pns));
 	        }
 	        
