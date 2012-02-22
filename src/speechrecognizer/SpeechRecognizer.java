@@ -81,7 +81,7 @@ public class SpeechRecognizer {
 			e.printStackTrace();
 		}
 		
-		filenames.add("tm001616"); // EASY DEBUG
+		filenames.add("tf010916"); // EASY DEBUG
 
 		// only have to do this once!
 		System.out.println("Building Hidden Markov Models");

@@ -38,8 +38,7 @@ public class WordRecognizer {
 		boolean isCorrect = false;
 		
 		// We don't have to go through all this trouble if we don't have a proper featureset
-		if(gotObservations){
-			
+		if(gotObservations) {
 			System.out.println("Calculating probabilities");
 			Word   bestWord  = null;
 			double  bestScore = Double.NEGATIVE_INFINITY;
@@ -106,12 +105,12 @@ public class WordRecognizer {
     	if(featuresRV[0].equals("0")) {
     		String[] timeslices = featuresRV[1].split(" ");
     		
-    		int nrTimeslices = timeslices.length / nrFeatures;
+    		int nrTimeslices = timeslices.length / nrFeatures; 
     		observations = new double[nrTimeslices][nrFeatures];
     		
     		for(int i = 0; i < nrTimeslices; i++) {
 	    		for(int j = 0; j < nrFeatures; j++) {
-	    			observations[i][j] = Double.valueOf(timeslices[i * nrFeatures + j].trim()).doubleValue();
+	    			observations[i][j] = Float.valueOf(timeslices[i * nrFeatures + j].trim()).floatValue();
 	    		}
     		}
     	}

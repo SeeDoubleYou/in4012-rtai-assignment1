@@ -26,11 +26,11 @@ public class State {
 		return phoneme;
 	}
 	
-	public double observationLikelihood(double[] observation){
-		if(observation.length != means.length){ return 0.0f; }
+	public double observationLikelihood(double[] observations){
+		if(observations.length != means.length){ return 0.0f; }
 		double result = 0.0f;
-		for (int i=0; i<observation.length; i++) {
-			result += Math.log( logGaussianProbability(means[i], variances[i], observation[i]) );
+		for (int i=0; i<observations.length; i++) {
+			result += Math.log( logGaussianProbability(means[i], variances[i], observations[i]) );
 		}
 		return result;
 	}

@@ -22,7 +22,7 @@ public class StateTest {
 	private String statename = "state";
 	
 	@Before
-	public void setUp(){
+	public void setUp(){ 
 		double[] means = {1,2,3,4};
 		double[] variances = {1,1,1,1};
 		state = new State(means, variances, statename, pn);
