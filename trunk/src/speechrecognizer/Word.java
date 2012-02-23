@@ -1,6 +1,7 @@
 package speechrecognizer;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Hashtable;
 
 /**
@@ -81,12 +82,12 @@ public class Word {
 		int nrObservations = oservations.length;
 		
 		/**
-		 * contains mappings from time-order [0,1,2,...,<Ti>,...,obs.length-1] to another Hashtable which contains
+		 * contains mappings from time-order [0,1,2,...,<Ti>,...,obs.length-1] to a HashMap which contains
 		 * mappings from each state <Sx> in the HMM to a probability denoting the highest probability of paths
 		 * ending in state <Sx> if we only consider observations [0,1,2,...,<Ti>]
 		 */
-		Hashtable<Integer, Hashtable<State, Double>> V = new Hashtable<Integer, Hashtable<State, Double>>();
-
+		HashMap<State, Double>[] V = new HashMap[nrObservations];
+		
 		/**
 		 * ol (observation likelihood) is a helper hashtable to contain observation likelihoods. Each State will
 		 * contain a Hashtable mapping time-order to the likelihood that time-instance occurred at that state.
@@ -94,12 +95,13 @@ public class Word {
 		Hashtable<State, Hashtable<Integer, Double>> ol = new Hashtable<State, Hashtable<Integer, Double>>();
 
 		// add new hashtable (that maps states to a probability) for time-instance 0
-		V.put(0, new Hashtable<State, Double>());
+		//V.put(0, new Hashtable<State, Double>());
+		V[0] = new HashMap<State, Double>();
 		
 		// anaylize <T0> separate from the other time-instances to set up some things
 		for(State state : states) {
 			// observation-likelihood of <T0> occurring for this state
-			V.get(0).put(state, state.observationLikelihood(oservations[0]));
+			V[0].put(state, state.observationLikelihood(oservations[0]));
 			
 			// each state <Sx> will get a list of most probable paths ending in <Sx>. Because we have
 			// only yet analyzed <T0> at this point, the most likely path ending in <Sx> is itself: [<Sx>]
@@ -122,7 +124,7 @@ public class Word {
 		
 		for(int i=1; i<nrObservations; i++) {
 			
-			V.put(i, new Hashtable<State, Double>());
+			V[i] = new HashMap<State, Double>();
 			
 			for(int s1 = 0; s1 < states.size(); s1++) {
 				State stateS1 = states.get(s1);
@@ -160,7 +162,7 @@ public class Word {
 							// p1: because all values in V are already calculated from log's, we dont have to take the log of p1.
 							// p2: the transition probabilities however are still 'regular' probabilities in [0,1] so we take the log.
 							// p3: the observation probability is already calculated as a log in the method State.observationlikelihood.
-							double prob = (double) (V.get(i-1).get(stateS2))	// p1: probability so far
+							double prob = (double) (V[i-1].get(stateS2))	// p1: probability so far
 											   + Math.log(temp_tp) 					// p2: transition probability from s2 to s1
 											   + (ol.get(stateS1).get(i));   // p3: observation probability of s1
 							
@@ -178,7 +180,7 @@ public class Word {
 				if(temp_state != null) {
 					// get the hashmap at the current timeinstance <Ti> and put the 
 					// probability of the most likely path ending at s1 in <Ti>
-					V.get(i).put(stateS1, max_prob);
+					V[i].put(stateS1, max_prob);
 				}
 			}//END outer for loop
 			
@@ -189,7 +191,7 @@ public class Word {
 		double max_prob = Double.NEGATIVE_INFINITY;
 		
 		// get the probabilities for each end-state at the last time-instance in V.
-		Hashtable<State, Double> probs = V.get(nrObservations-1);
+		HashMap<State, Double> probs = V[nrObservations-1];
 		for(State state : states) {
 			if(probs.get(state) > max_prob) {
 				max_prob = probs.get(state);
