@@ -1,7 +1,5 @@
 package tests;
 
-import speechrecognizer.*;
-
 import static org.junit.Assert.*;
 
 import org.junit.Before;
@@ -18,14 +16,13 @@ import speechrecognizer.State;
  */
 public class StateTest {
 	private State state;
-	private Phoneme pn = new Phoneme("random datastring");
 	private String statename = "state";
 	
 	@Before
 	public void setUp(){
 		double[] means = {1,2,3,4};
 		double[] variances = {1,1,1,1};
-		state = new State(means, variances, statename, pn);
+		state = new State(means, variances, statename);
 	}
 
 	@Test
@@ -39,11 +36,6 @@ public class StateTest {
 		double[] obs2 = {1,2};
 		assertEquals(state.observationLikelihood(obs2), 0.0f, 0.0001f);
 		assertEquals(Math.exp(state.observationLikelihood(obs)), 0.02533f, 0.0001f);
-	}
-	
-	@Test
-	public void testGetPhoneme(){
-		assertEquals(state.getPhoneme(), pn);
 	}
 	
 	@Test
