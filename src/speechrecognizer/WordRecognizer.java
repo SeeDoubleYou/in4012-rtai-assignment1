@@ -12,14 +12,15 @@ public class WordRecognizer {
 	private String filename;
 	private double[][] observations;
 	
-	private static final String data   = "data";
-	private static final String htk  	 = "htk/HTKTools";
+	private static String root		   = System.getProperty("user.dir");
+	private static final String data   = root + "/data";
+	private static final String htk    = root + "/htk/HTKTools";
 	private static final String conf   = data + "/hcopy_mfcc.cfg";
 	private static final String hcopy  = htk  + "/HCopy";
 	private static final String hlist  = htk  + "/HList";
 	private static final String mfc    = data + "/mfc/";
 	private static final String wav    = data + "/wav/";
-	private static final String label	 = data + "/label/";
+	private static final String label  = data + "/label/";
 	
 	private static final int nrFeatures = 39;
 	
@@ -43,7 +44,8 @@ public class WordRecognizer {
 			System.out.println("Calculating probabilities");
 			Word   bestWord  = null;
 			double  bestScore = Double.NEGATIVE_INFINITY;
-		            
+			
+			int wordCount = 0;
 		    for(Word word: SpeechRecognizer.words) {		    	
 		    	double probability = word.viterbi(observations);
 		    	if(probability > bestScore)
@@ -51,9 +53,15 @@ public class WordRecognizer {
 		    		bestWord = word;
 		    		bestScore = probability;
 		    	}
+		    	
+		    	// some sort of progress bar (a spinner doesn't work in eclipse since it lacks support for \r and \b)
+		    	if(wordCount % 10 == 0) {
+		    		System.out.print(".");
+		    	}
+		    	wordCount++;
 		    }
 		    String bestLabel = bestWord.getWord();
-	    
+		    
 		    System.out.println("\nBest word is " + bestLabel + " with a probability of " + bestScore);
 	    
 		    try {

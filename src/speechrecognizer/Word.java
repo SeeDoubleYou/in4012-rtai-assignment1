@@ -13,60 +13,50 @@ public class Word {
 
 	private String word;
 	
-//	private Phoneme[] phonemes;
 	private ArrayList<Phoneme> phonemes;
 	private ArrayList<State> states = new ArrayList<State>();
 	
 	//transition probabilities.
-	private Hashtable<Integer, Hashtable<Integer, Double>> trps;
+	private Hashtable<Integer, Hashtable<Integer, Double>> trps = new Hashtable<Integer, Hashtable<Integer, Double>>();
 	
 	// These 2 are only initialized after executing the viterbi algorithm
-	private ArrayList<State> best_path;
 	private double probability;
 	
 //	public Word(String word, Phoneme[] phonemes){
 	public Word(String word, ArrayList<Phoneme> phonemes) {
 		this.word = word;
 		this.phonemes = phonemes;
-		trps = new Hashtable<Integer, Hashtable<Integer, Double>>();
 		
-		double temp = -1;
-
+		//TODO: add comments on these
 		Hashtable<Integer, Double> hts1;
 		Hashtable<Integer, Double> hts2;
 		Hashtable<Integer, Double> hts3;
 		
-		for(int i=0; i < phonemes.size(); i++) {
-			State s2 = phonemes.get(i).getState(2);
-			State s3 = phonemes.get(i).getState(3);
-			State s4 = phonemes.get(i).getState(4);
-			states.add(s2);
-			states.add(s3);
-			states.add(s4);
+		int i = 0;
+		double temp = -1;
+		for(Phoneme phoneme: phonemes) {
+			states.add(phoneme.getState(2));
+			states.add(phoneme.getState(3));
+			states.add(phoneme.getState(4));
 			
 			double[][] tps = phonemes.get(i).getTransitionProbabilities();
 			if(temp != -1) {
-				try {
-					trps.get(i*3-1).put(i*3, temp);
-				}
-				catch(Exception e) { 
-					trps.put(i*3-1, new Hashtable<Integer, Double>()); 
-					trps.get(i*3-1).put(i*3, temp); 
-				}
+				trps.get(i*3-1).put(i*3, temp);
 			}
 
 			hts1 = new Hashtable<Integer, Double>();
 			hts2 = new Hashtable<Integer, Double>();
 			hts3 = new Hashtable<Integer, Double>();
-			hts1.put(i*3, tps[1][1]);
+			
+			hts1.put(i*3,   tps[1][1]);
 			hts1.put(i*3+1, tps[1][2]);
 			hts1.put(i*3+2, tps[1][3]);
 			
-			hts2.put(i*3, tps[2][1]);
+			hts2.put(i*3,   tps[2][1]);
 			hts2.put(i*3+1, tps[2][2]);
 			hts2.put(i*3+2, tps[2][3]);
 			
-			hts3.put(i*3, tps[3][1]);
+			hts3.put(i*3,   tps[3][1]);
 			hts3.put(i*3+1, tps[3][2]);
 			hts3.put(i*3+2, tps[3][3]);
 			
@@ -75,13 +65,11 @@ public class Word {
 			trps.put(i*3+2, hts3);
 			
 			temp = tps[3][4];
+
+			i++;
 		}
 	}
 	
-	public void viterbi2(double[] observations) {
-		
-	}
-
 	/**
 	 * Takes a set of observations and calculates the most likely path through my states, 
 	 * and returns the probability of it. The path is stored in this.best_path
@@ -97,13 +85,7 @@ public class Word {
 		 * ending in state <Sx> if we only consider observations [0,1,2,...,<Ti>]
 		 */
 		Hashtable<Integer, Hashtable<State, Double>> V = new Hashtable<Integer, Hashtable<State, Double>>();
-		
-		/** 
-		 * maps each state <Si> in the HMM to an ordered list of states, 
-		 * containing the most likely path (order of states) to end at state <Si>
-		 */
-		Hashtable<State, ArrayList<State>> path = new Hashtable<State, ArrayList<State>>();
-		
+
 		/**
 		 * ol (observation likelihood) is a helper hashtable to contain observation likelihoods. Each State will
 		 * contain a Hashtable mapping time-order to the likelihood that time-instance occurred at that state.
@@ -122,7 +104,6 @@ public class Word {
 			// only yet analyzed <T0> at this point, the most likely path ending in <Sx> is itself: [<Sx>]
 			ArrayList<State> stateList = new ArrayList<State>();
 			stateList.add(state);
-			path.put(state, stateList);
 			
 			// pre-calculate all observation likelihoods (all time-instances for all states)
 			// because this will save a lot of time in the inner of the for-loops later on
@@ -133,12 +114,6 @@ public class Word {
 			ol.put(state, tempobs);
 		}
 
-		/** 
-		 * helper variable representing an updated version (for <Ti>) of the 'path' object without actually
-		 * modifying 'path' object (because we need the unmodified <Ti-1> path object for calculations)
-		 */
-		Hashtable<State, ArrayList<State>> newpath;
-		
 		// helper var
 		double temp_tp;
 		
@@ -146,8 +121,6 @@ public class Word {
 		for(int i=1; i<obs.length; i++) {
 			V.put(i, new Hashtable<State, Double>());
 			
-			newpath = new Hashtable<State, ArrayList<State>>();
-
 			for(int s1 = 0; s1 < states.size(); s1++) {
 				/**
 				 *  helper var to keep track of the state that is most likely to contain the path that continues at s1
@@ -199,44 +172,25 @@ public class Word {
 					// get the hashmap at the current timeinstance <Ti> and put the 
 					// probability of the most likely path ending at s1 in <Ti>
 					V.get(i).put(states.get(s1), max_prob);
-					
-					// get path ending in temp_state at the previous time-instance, and add s1 to the end of this path.
-					// It is now the most likely path to end at s1 at current time-instance <Ti>, so remember it in newpath[s1]
-					ArrayList<State> templist = (ArrayList<State>) path.get(temp_state).clone();
-					templist.add(states.get(s1));
-					newpath.put(states.get(s1), templist);
 				}
 			}//END outer for loop
 			
 			// no need to remember old path, write the temp path on 'path' for the next time-iteration
-			path = newpath;
 		}
 
 		// max_prob will keep track of the highest probability of paths
 		double max_prob = Double.NEGATIVE_INFINITY;
 		
-		// keep track of the most probable end-state
-		State returnstate = null;
-
 		// get the probabilities for each end-state at the last time-instance in V.
 		Hashtable<State, Double> probs = V.get(obs.length-1);
 		for(State state : states) {
 			if(probs.get(state) > max_prob) {
 				max_prob = probs.get(state);
-				returnstate = state;
 			}
 		}
-		best_path = path.get(returnstate);
 		probability = max_prob;
 		
-		// show a dot (as a sort of progressbar, spinner doesn't work in eclipse (\b and \r are broken, sigh)
-		System.out.print(".");
-
 		return probability;
-	}
-	
-	public ArrayList<State> getBestPath() {
-		return best_path;
 	}
 	
 	public State getFirstState(){

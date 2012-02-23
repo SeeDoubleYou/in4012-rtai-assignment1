@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -31,11 +32,13 @@ import com.csvreader.CsvWriter;
  *
  */
 public class SpeechRecognizer {
-	static String data  	 = "data";
-	static String htk  	 	 = "htk/HTKTools";
+	static String root		 = System.getProperty("user.dir");
+	static String data  	 = root + "/data";
+	static String htk  	 	 = root + "/htk/HTKTools";
     static String wav   	 = data + "/wav/";
     static String hmmsMmf    = data + "/hmms.mmf";
     static String lexiconTxt = data + "/lexicon.txt";
+    static String testTxt    = data + "/testset.txt";
     
     static Hashtable<String, Phoneme> phonemes = new Hashtable<String, Phoneme>();
     static ArrayList<Word> words = new ArrayList<Word>();
@@ -50,7 +53,6 @@ public class SpeechRecognizer {
 	public static String performanceLogFile = "performance.csv";
 	public static boolean performanceLogExists;
     
-	
 	/**
 	 * @param args
 	 */
@@ -102,6 +104,7 @@ public class SpeechRecognizer {
 			System.exit(0);
 		}
 		
+		// if there is a filename available, run @link{WordRecognizer} on the filename and keep track of score.
 		if(!filename.isEmpty()) {
 			long lStartTime = new Date().getTime();
 			WordRecognizer wr = new WordRecognizer(filename);
@@ -121,6 +124,7 @@ public class SpeechRecognizer {
 			System.gc();
 		}
 		
+		// restart
 		run();
 	}
 	
@@ -185,6 +189,22 @@ public class SpeechRecognizer {
 				addFileName(child.getName());  
 			}
 			filename = getFilename();
+		}
+		
+		// user requested all files in testset.txt to be parsed, fill list of filenames based on 
+		// filenames in this file.
+		if(filename.equals("testset"))
+		{
+			filenames.clear();
+			
+			try {
+				String[] testset = readFileAsString(testTxt).split("\n");
+				addFileNames(testset);
+				filename = getFilename();
+			} catch (IOException e) {
+				System.out.println("Error while reading testset.txt");
+				e.printStackTrace();
+			}
 		}
 		
 		return filename;

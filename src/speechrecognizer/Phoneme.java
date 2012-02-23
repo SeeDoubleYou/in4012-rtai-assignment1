@@ -64,9 +64,9 @@ public class Phoneme {
             }
         }           
         
-        state2 = new State(means[0], variances[0], name + "2", this);
-        state3 = new State(means[1], variances[1], name + "3", this);
-        state4 = new State(means[2], variances[2], name + "4", this);
+        state2 = new State(means[0], variances[0], name + "2");
+        state3 = new State(means[1], variances[1], name + "3");
+        state4 = new State(means[2], variances[2], name + "4");
 	}
 	
 	public String getName(){
