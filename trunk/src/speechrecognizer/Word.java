@@ -60,7 +60,7 @@ public class Word {
 			hts3.put(i*3+1, tps[3][2]);
 			hts3.put(i*3+2, tps[3][3]);
 			
-			trps.put(i*3, hts1);
+			trps.put(i*3,   hts1);
 			trps.put(i*3+1, hts2);
 			trps.put(i*3+2, hts3);
 			
