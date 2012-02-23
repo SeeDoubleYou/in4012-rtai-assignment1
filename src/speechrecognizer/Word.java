@@ -17,18 +17,19 @@ public class Word {
 	private ArrayList<Phoneme> phonemes;
 	private ArrayList<State> states = new ArrayList<State>();
 	
-	//transition probabilities.
-	private Hashtable<Integer, Hashtable<Integer, Double>> trps = new Hashtable<Integer, Hashtable<Integer, Double>>();
+	//transition probabilities
+	private double[][] trps;
 	
 	// These 2 are only initialized after executing the viterbi algorithm
 	private double probability;
 	
-//	public Word(String word, Phoneme[] phonemes){
 	public Word(String word, ArrayList<Phoneme> phonemes) {
 		this.word = word;
 		this.phonemes = phonemes;
 		
-		//TODO: add comments on these
+		this.trps = new double[this.phonemes.size()*3+2][this.phonemes.size()*3+2];
+		
+		//temporary helper objects to build transition probability table
 		Hashtable<Integer, Double> hts1;
 		Hashtable<Integer, Double> hts2;
 		Hashtable<Integer, Double> hts3;
@@ -42,28 +43,20 @@ public class Word {
 			
 			double[][] tps = phonemes.get(i).getTransitionProbabilities();
 			if(temp != -1) {
-				trps.get(i*3-1).put(i*3, temp);
+				trps[i*3-1][i*3] = temp;
 			}
 
-			hts1 = new Hashtable<Integer, Double>();
-			hts2 = new Hashtable<Integer, Double>();
-			hts3 = new Hashtable<Integer, Double>();
+			trps[i*3][i*3] = tps[1][1];
+			trps[i*3][i*3+1] = tps[1][2];
+			trps[i*3][i*3+2] = tps[1][3];
 			
-			hts1.put(i*3,   tps[1][1]);
-			hts1.put(i*3+1, tps[1][2]);
-			hts1.put(i*3+2, tps[1][3]);
-			
-			hts2.put(i*3,   tps[2][1]);
-			hts2.put(i*3+1, tps[2][2]);
-			hts2.put(i*3+2, tps[2][3]);
-			
-			hts3.put(i*3,   tps[3][1]);
-			hts3.put(i*3+1, tps[3][2]);
-			hts3.put(i*3+2, tps[3][3]);
-			
-			trps.put(i*3,   hts1);
-			trps.put(i*3+1, hts2);
-			trps.put(i*3+2, hts3);
+			trps[i*3+1][i*3] = tps[2][1];
+			trps[i*3+1][i*3+1] = tps[2][2];
+			trps[i*3+1][i*3+2] = tps[2][3];
+
+			trps[i*3+2][i*3] = tps[3][1];
+			trps[i*3+2][i*3+1] = tps[3][2];
+			trps[i*3+2][i*3+2] = tps[3][3];
 			
 			temp = tps[3][4];
 
@@ -87,15 +80,15 @@ public class Word {
 		 * ending in state <Sx> if we only consider observations [0,1,2,...,<Ti>]
 		 */
 		HashMap<State, Double>[] V = new HashMap[nrObservations];
+		//double[][] V = new double[nrObservations][states.size()]
 		
 		/**
 		 * ol (observation likelihood) is a helper hashtable to contain observation likelihoods. Each State will
 		 * contain a Hashtable mapping time-order to the likelihood that time-instance occurred at that state.
 		 */
-		Hashtable<State, Hashtable<Integer, Double>> ol = new Hashtable<State, Hashtable<Integer, Double>>();
+		HashMap<State, double[]> ol = new HashMap<State, double[]>();
 
-		// add new hashtable (that maps states to a probability) for time-instance 0
-		//V.put(0, new Hashtable<State, Double>());
+		// add new hashmap (that maps states to a probability) for time-instance 0
 		V[0] = new HashMap<State, Double>();
 		
 		// anaylize <T0> separate from the other time-instances to set up some things
@@ -110,9 +103,9 @@ public class Word {
 			
 			// pre-calculate all observation likelihoods (all time-instances for all states)
 			// because this will save a lot of time in the inner of the for-loops later on
-			Hashtable<Integer, Double> tempobs = new Hashtable<Integer, Double>();
+			double[] tempobs = new double[nrObservations];
 			for(int i=0; i<nrObservations; i++) {
-				tempobs.put(i, state.observationLikelihood(oservations[i]));
+				tempobs[i] = state.observationLikelihood(oservations[i]);
 			} 
 			ol.put(state, tempobs);
 		}
@@ -142,7 +135,7 @@ public class Word {
 					
 					try{
 						// get transition probability from s2 to s1
-						temp_tp = trps.get(s2).get(s1);
+						temp_tp = trps[s2][s1];
 					}
 					catch(Exception e) { 
 						// if it doesn't exist, p = 0
@@ -164,7 +157,7 @@ public class Word {
 							// p3: the observation probability is already calculated as a log in the method State.observationlikelihood.
 							double prob = (double) (V[i-1].get(stateS2))	// p1: probability so far
 											   + Math.log(temp_tp) 					// p2: transition probability from s2 to s1
-											   + (ol.get(stateS1).get(i));   // p3: observation probability of s1
+											   + (ol.get(stateS1)[i]);   // p3: observation probability of s1
 							
 							// keep track of which path is most likely to lead up to this state
 							if(prob > max_prob) {
@@ -174,7 +167,7 @@ public class Word {
 						}
 						catch(Exception e) {}
 					}
-				}//END inner for loop
+				}//END inner for loop (stateS1)
 				
 				// just a precaution to make sure we do have a valid path
 				if(temp_state != null) {
@@ -182,10 +175,8 @@ public class Word {
 					// probability of the most likely path ending at s1 in <Ti>
 					V[i].put(stateS1, max_prob);
 				}
-			}//END outer for loop
-			
-			// no need to remember old path, write the temp path on 'path' for the next time-iteration
-		}
+			}//END outer for loop (stateS2)
+		}//END time-forloop
 
 		// max_prob will keep track of the highest probability of paths
 		double max_prob = Double.NEGATIVE_INFINITY;
