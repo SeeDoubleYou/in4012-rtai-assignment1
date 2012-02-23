@@ -1,6 +1,7 @@
 package speechrecognizer;
 
 import java.lang.Math;
+import java.util.Hashtable;
 
 /**
  * 
@@ -13,7 +14,7 @@ public class State {
 	private double[] means;
 	private double[] variances;
 	private String identifier;
-
+	
 	public State(double[] means, double[] variances, String identifier) {
 		this.means = means;
 		this.variances = variances;
@@ -57,10 +58,10 @@ public class State {
 		//
 		//             -(x-mu^2)/(2mu)                                               leave out constant
 		//            e 										     					    |                             
-		// return ln -----------------  = -((x-mu)^2)/(2sigma) - ln sqrt(2mu) + 0.572364943 =  -((x-mu)^2)/(2sigma) - ln sqrt(2mu);
+		// return ln -----------------  = -((x-mu)^2)/(2sigma) - ln sqrt(2mu) + 0.572364943 = -((x-mu)^2)/(2sigma) - ln sqrt(2mu);
 		//			   sqrt(2mu * PI)          
 		//
-		return (double)  -(((xminmu)*(xminmu))/(twosigma)) - Math.log(Math.sqrt(twosigma));
+		return -(((xminmu)*(xminmu))/(twosigma)) - Math.log(Math.sqrt(twosigma));
 	}
 
 	public String toString(){
