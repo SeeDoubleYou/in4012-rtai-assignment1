@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Date;
 
 import com.csvreader.CsvWriter;
 
@@ -24,13 +25,19 @@ public class WordRecognizer {
 	
 	private static final int nrFeatures = 39;
 	
+	private static long runningTime;
+	
 	public static CsvWriter performanceLog;
     
     public WordRecognizer(String filename) {
 		this.filename = filename;
+		this.runningTime = 0;
 	}
     
 	public Boolean run() {
+
+		long lStartTime = new Date().getTime();
+		
 	 	System.out.println("\n/////////////////////////////////////////////////////////////");
 		System.out.println("Investigating audiofile: " + filename);
 		buildMFCFileFromAudio(filename);
@@ -62,7 +69,12 @@ public class WordRecognizer {
 		    }
 		    String bestLabel = bestWord.getWord();
 		    
-		    System.out.println("\nBest word is " + bestLabel + " with a probability of " + bestScore);
+			long lEndTime = new Date().getTime();
+			
+			// time difference in seconds
+			this.runningTime = lEndTime - lStartTime;
+			
+			System.out.println("\nBest word is " + bestLabel + " with a log(p) of " + bestScore);
 	    
 		    try {
 		    	String actualLabel = SpeechRecognizer.readFileAsString(label + filename + ".lab").trim();
@@ -71,6 +83,7 @@ public class WordRecognizer {
 				SpeechRecognizer.performanceLog.write(bestWord.getWord());
 				SpeechRecognizer.performanceLog.write("" + bestScore);
 				SpeechRecognizer.performanceLog.write(actualLabel.equals(bestLabel) ? "1" : "0");
+				SpeechRecognizer.performanceLog.write("" + this.runningTime);
 				SpeechRecognizer.performanceLog.endRecord();
 				SpeechRecognizer.performanceLog.flush();
 				System.out.println("Given:\t\t" + actualLabel);
@@ -195,5 +208,14 @@ public class WordRecognizer {
     		}
     		System.out.println("");
     	}
+    }
+    
+    /**
+     * Returns the time (in ms) it took to recognize the word
+     * 
+     * @return long
+     */
+    public long getRunningTime(){
+    	return this.runningTime;
     }
 }
