@@ -48,6 +48,7 @@ public class SpeechRecognizer {
     static int total = 0;
     static int correct = 0;
     static int corrupt = 0;
+    static long runningTime = 0;
     
     public static CsvWriter performanceLog; // file to keep track of performance (best to delete before an "all" run 
 	public static String performanceLogFile = "performance.csv";
@@ -76,6 +77,7 @@ public class SpeechRecognizer {
 				performanceLog.write("recognized");
 				performanceLog.write("probability");
 				performanceLog.write("correct");
+				performanceLog.write("milliseconds");
 				performanceLog.endRecord();
 				performanceLog.flush();
 			}
@@ -106,18 +108,18 @@ public class SpeechRecognizer {
 		
 		// if there is a filename available, run @link{WordRecognizer} on the filename and keep track of score.
 		if(!filename.isEmpty()) {
-			long lStartTime = new Date().getTime();
 			WordRecognizer wr = new WordRecognizer(filename);
 			if(wr.run()) {
 				correct++;
 			}
-			long lEndTime = new Date().getTime();
 			
-			// time difference in seconds
-			float difference = (long)(lEndTime - lStartTime) / (float)1000;
+			long rtime = wr.getRunningTime();
+			runningTime += rtime;
 
-			System.out.println("Elapsed time: " + difference + "s, correct classifications: [" 
+			System.out.println("Time: " + rtime + " ms (total " + runningTime + " ms)");
+			System.out.println("correct classifications: [" 
 							 + correct + "/" + total + "], " + corrupt + " corrupt files");
+		    
 
 			// Force a garbage collection cleanup
 			wr = null;
@@ -160,7 +162,8 @@ public class SpeechRecognizer {
 		String filename = "";
 		
 		if(filenames.size() == 0) {
-			// no filename available, ask for input of user
+			// no filename available, ask for input of user (and reset total running time)
+			
 			BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
 			System.out.println("Which file(s) would you like to try?");
 			try {
