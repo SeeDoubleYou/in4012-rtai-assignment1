@@ -9,6 +9,12 @@ import java.util.Date;
 
 import com.csvreader.CsvWriter;
 
+/**
+ * 
+ * @author Chris van Egmond
+ * @author Cees-Willem Hofstede
+ *
+ */
 public class WordRecognizer {
 	private String filename;
 	private double[][] observations;

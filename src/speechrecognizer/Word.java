@@ -1,13 +1,11 @@
 package speechrecognizer;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Hashtable;
 
 /**
  * 
  * @author Chris van Egmond
- * @author Cees-Wilem Hofstede
+ * @author Cees-Willem Hofstede
  *
  */
 public class Word {
@@ -116,11 +114,11 @@ public class Word {
 					}
 					catch(Exception e) { 
 						// if it doesn't exist, p = 0
-						temp_tp = 0.0f;
+						temp_tp = 0.0d;
 					}
 					
 					// if the transition probability is 0, we can just skip this step (since its an impossible sequence)
-					if(temp_tp > 0.0f) {
+					if(temp_tp > 0.0d) {
 						try{
 							/**
 							 * calculate probability of the most likely path leading to s1 by trying for every state (s2)

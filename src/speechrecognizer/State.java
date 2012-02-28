@@ -6,7 +6,7 @@ import java.util.Hashtable;
 /**
  * 
  * @author Chris van Egmond
- * @author Cees-Wilem Hofstede
+ * @author Cees-Willem Hofstede
  *
  */
 public class State {
@@ -33,10 +33,10 @@ public class State {
 	 */
 	public double observationLikelihood(double[] observation){
 		if(observation.length != means.length) { 
-			return 0.0f; 
+			return 0.0d; 
 		}
 		
-		double result = 0.0f;
+		double result = 0.0d;
 		int nrObservations = observation.length;
 		for (int i=0; i < nrObservations; i++) {
 			result += logGaussianProbability(means[i], variances[i], observation[i]);
