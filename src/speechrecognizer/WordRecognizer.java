@@ -59,7 +59,7 @@ public class WordRecognizer {
 			double  bestScore = Double.NEGATIVE_INFINITY;
 			
 			int wordCount = 0;
-		    for(Word word: SpeechRecognizer.words) {		    	
+		    for(Word word: SpeechRecognizer.words) {
 		    	double probability = word.viterbi(observations);
 		    	if(probability > bestScore)
 		    	{
@@ -90,6 +90,9 @@ public class WordRecognizer {
 				SpeechRecognizer.performanceLog.write("" + bestScore);
 				SpeechRecognizer.performanceLog.write(actualLabel.equals(bestLabel) ? "1" : "0");
 				SpeechRecognizer.performanceLog.write("" + this.runningTime);
+				SpeechRecognizer.performanceLog.write("" + observations.length);
+				SpeechRecognizer.performanceLog.write("" + actualLabel.length());
+				SpeechRecognizer.performanceLog.write("" + bestLabel.length());
 				SpeechRecognizer.performanceLog.endRecord();
 				SpeechRecognizer.performanceLog.flush();
 				System.out.println("Given:\t\t" + actualLabel);

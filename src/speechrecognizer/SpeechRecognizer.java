@@ -76,6 +76,9 @@ public class SpeechRecognizer {
 				performanceLog.write("probability");
 				performanceLog.write("correct");
 				performanceLog.write("milliseconds");
+				performanceLog.write("observations");
+				performanceLog.write("letters_in_word_label");
+				performanceLog.write("letters_in_word_recognized");
 				performanceLog.endRecord();
 				performanceLog.flush();
 			}
