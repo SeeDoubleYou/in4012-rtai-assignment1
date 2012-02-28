@@ -81,15 +81,20 @@ public class Word {
 		
 		// anaylize <T0> separate from the other time-instances to set up some things
 		for(int s0 = 0; s0 < states.length; s0++) {
-			// observation-likelihood of <T0> occurring for this state
 			
 			State state = this.states[s0];
-			V[0][s0] = state.observationLikelihood(observations[0]);
 			
 			// pre-calculate all observation likelihoods (all time-instances for all states)
 			// because this will save a lot of time in the inner of the for-loops later on
 			for(int i=0; i<nrObservations; i++) {
 				ol[s0][i] = state.observationLikelihood(observations[i]);
+			}
+			
+			if(s0 == 0){
+				// observation-likelihood of <T0> occurring for this state			
+				V[0][s0] = state.observationLikelihood(observations[0]);
+			}else{
+				V[0][s0] = Double.NEGATIVE_INFINITY;
 			}
 		}
 
@@ -100,9 +105,6 @@ public class Word {
 		for(int i=1; i<nrObservations; i++) {
 			
 			for(int s1 = 0; s1 < states.length; s1++) {
-				
-				// helper var to keep track of the state that is most likely to contain the path that continues at s1
-				State temp_state = null;
 				
 				// negative infinity so the first probability when looking for the max will always be larger
 				double max_prob = Double.NEGATIVE_INFINITY;
@@ -129,27 +131,23 @@ public class Word {
 							 * p1: because all values in V are already calculated from log's, we dont have to take the log of p1.
 							 * p2: the transition probabilities however are still 'regular' probabilities in [0,1] so we take the log.
 							 * p3: the observation probability is already calculated as a log in the method State.observationlikelihood.
+							 * Since p3 is the same for each state <s2>, it is only added after this loop.
 							 */
 							double prob = (double) (V[i-1][s2])	// p1: probability so far
-										+ Math.log(temp_tp) 	// p2: transition probability from s2 to s1
-										+ (ol[s1][i]);			// p3: observation probability of s1
+										+ Math.log(temp_tp); 	// p2: transition probability from s2 to s1
 							
-							// keep track of which path is most likely to lead up to this state
-							if(prob > max_prob) {
-								max_prob = prob;
-								temp_state = states[s2];
-							}
+							// keep track of which path is most likely to lead up to s1
+							max_prob = Math.max(max_prob, prob);
 						}
 						catch(Exception e) {}
 					}
 				}//END inner for loop (stateS1)
 				
-				// just a precaution to make sure we do have a valid path
-				if(temp_state != null) {
-					// get the probability of the most likely path ending at s1 in <Ti>
-					V[i][s1] = max_prob;
-				}
+				// store the probability of the most likely path ending at s1 in <Ti>
+				V[i][s1] = max_prob + (ol[s1][i]); // add p3: observation probability of s1
+				
 			}//END outer for loop (stateS2)
+			
 		}//END time-forloop
 
 		// max_prob will keep track of the highest probability of paths
