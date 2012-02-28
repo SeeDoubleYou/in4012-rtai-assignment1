@@ -3,7 +3,7 @@ package speechrecognizer;
 /**
  * 
  * @author Chris van Egmond
- * @author Cees-Wilem Hofstede
+ * @author Cees-Willem Hofstede
  *
  */
 public class Phoneme {

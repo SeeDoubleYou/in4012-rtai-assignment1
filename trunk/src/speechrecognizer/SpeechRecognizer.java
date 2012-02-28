@@ -6,10 +6,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
 
@@ -28,7 +26,7 @@ import com.csvreader.CsvWriter;
  * @see http://javacsv.sourceforge.net/
  * 
  * @author Chris van Egmond
- * @author Cees-Wilem Hofstede
+ * @author Cees-Willem Hofstede
  *
  */
 public class SpeechRecognizer {
