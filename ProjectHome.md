@@ -1,0 +1,1 @@
+Assignment 1 of Real Time AI & Speech Recognition, build a simple speech recognizer
